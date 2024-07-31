@@ -46,7 +46,7 @@ const HomePage = () => {
         <Mascot status={status} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-4xl mb-[100px]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-4xl mb-[50px]">
         <Cards link="/shop" icon={<ShoppingCart />} title="Shop" description="Buy Hearts"/>
         <Cards link="/notes" icon={<BookIcon />} title="Notes" description="Manage your notes"/>
         <Cards link="/progress" icon={<ActivityIcon />} title="Progress" description="Track your progress"/>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 import Navbar from "@/components/Navbar";
 import "@/styles/globals.css";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Home Page",
@@ -10,9 +11,10 @@ export const metadata: Metadata = {
 
 const HomeLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
   return (
-    <div className="dark:bg-black">
+    <div className="dark:bg-black flex flex-col min-h-screen">
       <Navbar />
-      {children}
+      <main className="flex-grow">{children}</main>
+      <Footer />
     </div>
   );
 };

@@ -28,7 +28,7 @@ const Mascot: React.FC<MascotProps> = ({ status }) => {
     <div className='h-[300px] w-[300px] mt-12 text-center'>
       {animationData && <Lottie animationData={animationData} loop={true} />}
       <p>Pandy can't wait to study with you!</p>
-      <Button className='mt-4 bg-[#FF7878] text-white hover:bg-[#fc5c5c]'>Complete Tasks</Button>
+      <Button className='mt-4 bg-[#FF7878] text-white hover:bg-[#fc5c5c]'>Start Studying</Button>
     </div>
   );
 };
