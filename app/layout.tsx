@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+
+import { Providers } from "./providers";
+
 import "@/styles/globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
-  title: "Panda Pal",
-  description: "Panda Pal - Your friendly AI study companion.",
+  title: "Panda Buddy",
+  description: "Panda Buddy - Your friendly AI study companion.",
 };
 
 export default function RootLayout({
@@ -14,9 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <ClerkProvider>
-        <body>{children}</body>
-      </ClerkProvider>
+      <Providers>{children}</Providers>
     </html>
   );
 }

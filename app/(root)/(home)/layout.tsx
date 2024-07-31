@@ -6,7 +6,7 @@ import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: "Home Page",
-  description: "Panda Pal - Your friendly AI study companion.",
+  description: "Panda Buddy - Your friendly AI study companion.",
 };
 
 export default function RootLayout({
