@@ -1,3 +1,4 @@
+"use client"
 import { useTheme } from 'next-themes';
 import React from 'react';
 import { MoonStar, SunDim } from 'lucide-react';
