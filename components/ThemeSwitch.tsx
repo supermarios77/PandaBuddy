@@ -1,83 +1,22 @@
-"use client";
+import { useTheme } from 'next-themes';
+import React from 'react';
+import { MoonStar, SunDim } from 'lucide-react';
 
-import { FC } from "react";
-import { VisuallyHidden } from "@react-aria/visually-hidden";
-import { SwitchProps, useSwitch } from "@nextui-org/switch";
-import { useTheme } from "next-themes";
-import { useIsSSR } from "@react-aria/ssr";
-import clsx from "clsx";
-
-import { MoonIcon, SunIcon } from "@radix-ui/react-icons";
-
-export interface ThemeSwitchProps {
-  className?: string;
-  classNames?: SwitchProps["classNames"];
-}
-
-export const ThemeSwitch: FC<ThemeSwitchProps> = ({
-  className,
-  classNames,
-}) => {
+const ThemeSwitch = () => {
   const { theme, setTheme } = useTheme();
-  const isSSR = useIsSSR();
 
-  const onChange = () => {
-    theme === "light" ? setTheme("dark") : setTheme("light");
+  const handleClick = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
-  const {
-    Component,
-    slots,
-    isSelected,
-    getBaseProps,
-    getInputProps,
-    getWrapperProps,
-  } = useSwitch({
-    isSelected: theme === "light" || isSSR,
-    "aria-label": `Switch to ${
-      theme === "light" || isSSR ? "dark" : "light"
-    } mode`,
-    onChange,
-  });
-
   return (
-    <Component
-      {...getBaseProps({
-        className: clsx(
-          "px-px transition-opacity hover:opacity-80 cursor-pointer",
-          className,
-          classNames?.base
-        ),
-      })}
+    <button
+      onClick={handleClick}
+      className="p-2 rounded text-gray-900 dark:text-gray-100"
     >
-      <VisuallyHidden>
-        <input {...getInputProps()} />
-      </VisuallyHidden>
-      <div
-        {...getWrapperProps()}
-        className={slots.wrapper({
-          class: clsx(
-            [
-              "w-auto h-auto",
-              "bg-transparent",
-              "rounded-lg",
-              "flex items-center justify-center",
-              "group-data-[selected=true]:bg-transparent",
-              "!text-default-500",
-              "pt-px",
-              "px-0",
-              "mx-0",
-            ],
-            classNames?.wrapper
-          ),
-        })}
-      >
-        {!isSelected || isSSR ? (
-          <SunIcon />
-        ) : (
-          <MoonIcon />
-        )}
-      </div>
-    </Component>
+      {theme === 'light' ? <MoonStar /> : <SunDim />}
+    </button>
   );
 };
+
+export default ThemeSwitch;

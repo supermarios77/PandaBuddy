@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-
+import { ReactNode } from "react";
 import Navbar from "@/components/Navbar";
-
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -9,17 +8,13 @@ export const metadata: Metadata = {
   description: "Panda Buddy - Your friendly AI study companion.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const HomeLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
   return (
-    <html lang="en">
-        <body>
-          <Navbar />
-          {children}
-        </body>
-    </html>
+    <div className="dark:bg-black">
+      <Navbar />
+      {children}
+    </div>
   );
-}
+};
+
+export default HomeLayout;
