@@ -5,7 +5,7 @@ import "@/styles/globals.css";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Home Page",
+  title: "Panda Buddy - Lets Study!",
   description: "Panda Buddy - Your friendly AI study companion.",
 };
 
