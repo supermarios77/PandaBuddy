@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="mx-auto max-w-md rounded-xl bg-background shadow-2xl ring-1 ring-gray-900/5">
           <nav className="flex items-center justify-between gap-4 p-4">
             <Link
-              href="#"
+              href="/"
               className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500  focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
               prefetch={false}
             >
@@ -17,7 +17,7 @@ export default function Footer() {
               <span className="sr-only">Home</span>
             </Link>
             <Link
-              href="#"
+              href="/timer"
               className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               prefetch={false}
             >
@@ -25,7 +25,7 @@ export default function Footer() {
               <span className="sr-only">Focus Time</span>
             </Link>
             <Link
-              href="#"
+              href="/settings"
               className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
               prefetch={false}
             >
