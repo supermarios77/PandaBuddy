@@ -1,10 +1,12 @@
 "use client";
 import Lottie from "lottie-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import animationData from "./FocusPanda.json";
 import { Button } from "@/components/ui/button";
 import { PauseIcon, PlayIcon, ListRestart } from "lucide-react";
 import successAnimation from "./TimerComplete.json";
+
+import audio from "@/public/audio/timer-bgm.mp3";
 
 const motivationalMessages = [
   "Great job! Keep up the good work!",
@@ -13,7 +15,7 @@ const motivationalMessages = [
   "You’ve got this!",
   "Keep pushing forward!",
   "Awesome progress!",
-  "Way to go! You're making great strides!"
+  "Way to go! You're making great strides!",
 ];
 
 const getRandomMessage = () => {
@@ -26,7 +28,9 @@ const PomodoroTimer = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [showAnimation, setShowAnimation] = useState(false);
   const [isSuccessAnimation, setIsSuccessAnimation] = useState(false);
-  const [motivationalMessage, setMotivationalMessage] = useState('');
+  const [motivationalMessage, setMotivationalMessage] = useState("");
+
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -36,7 +40,7 @@ const PomodoroTimer = () => {
       setIsRunning(false);
       setShowAnimation(true);
       setIsSuccessAnimation(true);
-      setMotivationalMessage(''); // Clear motivational message when showing success animation
+      setMotivationalMessage("");
     }
     return () => clearTimeout(timer);
   }, [isRunning, secondsLeft]);
@@ -47,10 +51,18 @@ const PomodoroTimer = () => {
       setMotivationalMessage(getRandomMessage());
       messageInterval = setInterval(() => {
         setMotivationalMessage(getRandomMessage());
-      }, 30000); // Update message every 30 seconds
+      }, 30000);
     }
     return () => clearInterval(messageInterval);
   }, [isRunning, showAnimation]);
+
+  useEffect(() => {
+    if (isRunning && audioRef.current) {
+      audioRef.current.play();
+    } else if (audioRef.current) {
+      audioRef.current.pause();
+    }
+  }, [isRunning]);
 
   const toggleTimer = () => {
     setIsRunning(!isRunning);
@@ -58,10 +70,10 @@ const PomodoroTimer = () => {
 
   const resetTimer = () => {
     setIsRunning(false);
-    setSecondsLeft(1500); // Set to 25 minutes (1500 seconds)
+    setSecondsLeft(1500);
     setShowAnimation(false);
     setIsSuccessAnimation(false);
-    setMotivationalMessage(getRandomMessage()); // Reset motivational message
+    setMotivationalMessage(getRandomMessage());
   };
 
   return (
@@ -71,14 +83,16 @@ const PomodoroTimer = () => {
         {showAnimation ? (
           <Lottie animationData={successAnimation} loop={false} />
         ) : (
-          <Lottie animationData={animationData} loop={isRunning ? true : false} />
+          <Lottie animationData={animationData} loop={true} />
         )}
       </div>
       {secondsLeft === 0 && isSuccessAnimation ? (
         <div className="text-3xl font-bold mb-4">Well Done!</div>
       ) : (
         <div className="text-6xl font-bold mb-4">
-          {Math.floor(secondsLeft / 60).toString().padStart(2, "0")}
+          {Math.floor(secondsLeft / 60)
+            .toString()
+            .padStart(2, "0")}
           :{(secondsLeft % 60).toString().padStart(2, "0")}
         </div>
       )}
@@ -93,6 +107,7 @@ const PomodoroTimer = () => {
           <ListRestart />
         </Button>
       </div>
+      <audio ref={audioRef} src={audio} loop preload="auto" />
     </div>
   );
 };
