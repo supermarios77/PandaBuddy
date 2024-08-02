@@ -25,7 +25,7 @@ export default function WhatDoYouWantToLearn() {
             "Science",
             "History",
             "Geography",
-            "Coding",
+            "English",
             "Art",
           ].map((category) => (
             <div

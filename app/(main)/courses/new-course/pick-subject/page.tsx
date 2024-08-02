@@ -17,14 +17,14 @@ export default function PickYourSubject() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            body: `List 6 common subjects for ${category} at ${level}`,
+            body: `List top 6 subjects taught for ${category} at ${level}`,
           }),
         });
         const data = await response.json();
         const cleanedSubjects = data.output
           .split("\n")
           .map((subject: string) => subject.replace(/[*-]/g, '').trim())
-          .filter((subject: string) => subject.length > 0)
+          .filter((subject: string | any[]) => subject.length > 0)
           .sort();
         setSubjects(cleanedSubjects);
       } catch (error) {
@@ -36,8 +36,10 @@ export default function PickYourSubject() {
   }, [level, category]);
 
   const handleSubjectSelect = (selectedSubject: string) => {
+    const courseId = new Date().getTime(); // Generate a unique ID for the course
+    const encodedSubject = encodeURIComponent(selectedSubject);
     router.push(
-      `/courses/new-course/pick-topic?category=${category}&level=${level}&selectedSubject=${encodeURIComponent(selectedSubject)}`
+      `/courses/new-course/pick-topic?category=${encodeURIComponent(category)}&level=${encodeURIComponent(level)}&subject=${encodedSubject}`
     );
   };
 

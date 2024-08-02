@@ -7,7 +7,7 @@ export default function PickYourTopic() {
   const searchParams = useSearchParams();
   const level = searchParams.get("level") as string;
   const category = searchParams.get("category") as string;
-  const selectedSubject = searchParams.get("selectedSubject") as string;
+  const selectedSubject = searchParams.get("subject") as string;
 
   const [topics, setTopics] = useState<string[]>([]);
 
@@ -18,14 +18,14 @@ export default function PickYourTopic() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            body: `List 6 common topics for ${selectedSubject} in ${category} at ${level}`,
+            body: `List top 9 topics taught for ${selectedSubject} at ${level}`,
           }),
         });
         const data = await response.json();
         const cleanedTopics = data.output
           .split("\n")
           .map((topic: string) => topic.replace(/[*-]/g, '').trim())
-          .filter((topic: string) => topic.length > 0)
+          .filter((topic: string | any[]) => topic.length > 0)
           .sort();
         setTopics(cleanedTopics);
       } catch (error) {
@@ -38,8 +38,9 @@ export default function PickYourTopic() {
 
   const handleTopicSelect = (selectedTopic: string) => {
     const courseId = new Date().getTime(); // Generate a unique ID for the course
+    const lessonId = `${category}_${level}_${selectedSubject}_${selectedTopic}`.replace(/\s/g, '-'); // Create a lessonId from the information
     router.push(
-      `/courses/${courseId}?category=${category}&level=${level}&selectedSubject=${encodeURIComponent(selectedSubject)}&selectedTopic=${encodeURIComponent(selectedTopic)}`
+      `/courses/${courseId}/${lessonId}`
     );
   };
 
