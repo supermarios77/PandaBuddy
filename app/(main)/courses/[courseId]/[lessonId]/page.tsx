@@ -1,41 +1,14 @@
 "use client";
 import { useEffect, useState } from 'react';
 import ReactMarkdown from "react-markdown";
-import YouTube from 'react-youtube';
+import YouTube from 'react-youtube'; // Import YouTube player component
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-
-// Trusted educational channels
-const TRUSTED_CHANNELS = [
-  '@pinkfong',
-  '@SuperSimpleSongs',
-  '@TED-Ed',
-  '@Numberblocks',
-  '@Alphablocks',
-  '@CrashCourse',
-  '@Vsauce',
-  '@SciShowKids',
-  '@NatGeoKids',
-  '@LearnEngineering',
-  '@LearnEnglishWithTVSeries',
-  '@Numberphile',
-  '@TheSchoolOfLife',
-  '@Code.org',
-  '@KhanAcademy',
-  '@CuriousKids',
-  '@NationalGeographic',
-  '@TechForKids',
-  '@SmileandLearnEnglish',
-  '@Blippi',
-  '@kiddosworldtv',
-  '@ScratchGarden',
-  '@msrachel'
-];
 
 export default function LecturePage({ params }: { params: { courseId: string; lessonId: string; } }) {
   const { lessonId } = params;
   const [lectureContent, setLectureContent] = useState<string>('');
-  const [videoId, setVideoId] = useState<string | null>(null);
+  const [videoId, setVideoId] = useState<string | null>(null); // State to store video ID
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +26,7 @@ export default function LecturePage({ params }: { params: { courseId: string; le
           body: JSON.stringify({ body: prompt }),
         });
         const data = await response.json();
-        console.log('Lecture Content Response:', data);
+        console.log('Lecture Content Response:', data); // Debugging line
 
         if (response.ok) {
           setLectureContent(data.output.trim());
@@ -62,12 +35,15 @@ export default function LecturePage({ params }: { params: { courseId: string; le
         }
       } catch (error) {
         setError('Failed to fetch lecture content');
+      } finally {
+        setLoading(false); // Ensure loading is set to false
       }
     };
 
     const fetchYouTubeVideo = async () => {
       try {
-        const queryPrompt = `Generate a concise and relevant search query for YouTube to find educational videos on the topic of ${selectedTopic}. The query should focus on finding high-quality content related to the topic.`;
+        // Generate a search query using Gemini
+        const queryPrompt = `Generate a search query for YouTube on the topic of ${selectedTopic} for ${level}`;
         const queryResponse = await fetch('/api/generate', {
           method: 'POST',
           headers: {
@@ -77,20 +53,31 @@ export default function LecturePage({ params }: { params: { courseId: string; le
         });
         const queryData = await queryResponse.json();
         const searchQuery = queryData.output.trim();
-        console.log('Search Query:', searchQuery);
+        console.log('Search Query:', searchQuery); // Debugging line
 
-        const videoResponse = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&key=${YOUTUBE_API_KEY}&order=relevance&maxResults=10`);
+        // Check localStorage for a cached video ID
+        const cachedVideoId = localStorage.getItem(`videoId-${searchQuery}`);
+        if (cachedVideoId) {
+          setVideoId(cachedVideoId);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch YouTube videos
+        const videoResponse = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&key=${YOUTUBE_API_KEY}&order=relevance&maxResults=1`);
         const videoData = await videoResponse.json();
-        console.log('YouTube API Response:', videoData);
+        console.log('YouTube API Response:', videoData); // Debugging line
+
         if (videoResponse.ok) {
           const videos = videoData.items;
-          const filteredVideos = videos.filter((video: { snippet: { channelTitle: string; }; }) => TRUSTED_CHANNELS.some(channel => video.snippet.channelTitle === channel.slice(1)));
-          if (filteredVideos.length > 0) {
-            const videoId = filteredVideos[0].id.videoId;
-            console.log('Video ID:', videoId);
+          if (videos.length > 0) {
+            const videoId = videos[0].id.videoId;
+            console.log('Video ID:', videoId); // Debugging line
             setVideoId(videoId);
+            // Cache the video ID in localStorage
+            localStorage.setItem(`videoId-${searchQuery}`, videoId);
           } else {
-            console.log('No relevant videos found from trusted channels');
+            console.log('No videos found');
           }
         } else {
           console.error('Failed to fetch videos:', videoData.error);
@@ -98,7 +85,7 @@ export default function LecturePage({ params }: { params: { courseId: string; le
       } catch (error) {
         console.error('Failed to fetch YouTube video:', error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Ensure loading is set to false
       }
     };
 
@@ -108,6 +95,7 @@ export default function LecturePage({ params }: { params: { courseId: string; le
     }
   }, [lessonId]);
 
+  // Debugging: log states
   console.log('Loading:', loading);
   console.log('Error:', error);
   console.log('Lecture Content:', lectureContent);
