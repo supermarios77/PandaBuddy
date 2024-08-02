@@ -1,11 +1,11 @@
-"use client"
+"use client";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 export default function PickYourLevel() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const subject = searchParams.get('subject') as string; // Retrieve the 'subject' query parameter
+  const subject = searchParams.get('subject') as string;
   const [level, setLevel] = useState('');
 
   const handleLevelSubmit = () => {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import "@/styles/globals.css";
 import Footer from "@/components/Footer";
@@ -11,11 +11,13 @@ export const metadata: Metadata = {
 
 const HomeLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
   return (
-    <div className="dark:bg-black flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-grow">{children}</main>
-      <Footer />
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <div className="dark:bg-black flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow">{children}</main>
+        <Footer />
+      </div>
+    </Suspense>
   );
 };
 
