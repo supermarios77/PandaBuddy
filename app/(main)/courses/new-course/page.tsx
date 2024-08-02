@@ -4,11 +4,11 @@ import { useState } from "react";
 
 export default function WhatDoYouWantToLearn() {
   const router = useRouter();
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const handleSubjectClick = (subject: string) => {
-    setSelectedSubject(subject);
-    router.push(`/courses/new-course/pick-level?subject=${subject}`);
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(category);
+    router.push(`/courses/new-course/pick-level?category=${category}`);
   };
 
   return (
@@ -24,16 +24,16 @@ export default function WhatDoYouWantToLearn() {
             "Maths",
             "Science",
             "History",
-            "Biology",
+            "Geography",
             "Coding",
-            "Languages",
-          ].map((subject) => (
+            "Art",
+          ].map((category) => (
             <div
-              key={subject}
+              key={category}
               className="flex items-center justify-center rounded-lg bg-white p-6 text-center text-black transition-colors hover:bg-gray-200 shadow-lg cursor-pointer"
-              onClick={() => handleSubjectClick(subject)}
+              onClick={() => handleCategoryClick(category)}
             >
-              <h3 className="text-2xl font-bold">{subject}</h3>
+              <h3 className="text-2xl font-bold">{category}</h3>
             </div>
           ))}
         </div>
