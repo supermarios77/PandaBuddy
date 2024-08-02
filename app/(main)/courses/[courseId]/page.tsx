@@ -16,7 +16,7 @@ export default function LecturePage() {
   useEffect(() => {
     const fetchLectureContent = async () => {
       try {
-        const prompt = `Teach a ${level} student about ${selectedSubject}. Provide a clear and engaging explanation as if you were a teacher in a classroom. Include detailed explanations, relevant examples, and set up the content to be interactive. Ensure that the lecture prepares the student for exercises and quizzes that will follow.`;
+        const prompt = `Teach me a lesson on ${selectedSubject}. Assume I know nothing about i am ${level}`;
         const response = await fetch('/api/generate', {
           method: 'POST',
           headers: {
