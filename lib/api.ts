@@ -20,4 +20,17 @@ const fetchYouTubeVideo = async (selectedTopic: string, level: string) => {
   }
 };
 
-export { fetchLectureContent, fetchYouTubeVideo };
+const fetchTitle = async (topic: string) => {
+  const prompt = `Rewrite this title ${topic} remove bullet points`;
+  const response = await postRequest(prompt);
+  return response.output.trim();
+};
+
+const fetchKeyPoints = async (topic: string) => {
+  const prompt = `Give 5 key points on this topic ${topic}, just give keypoints no titles`;
+  const response = await postRequest(prompt);
+  return response.output.trim();
+};
+
+
+export { fetchLectureContent, fetchYouTubeVideo, fetchTitle, fetchKeyPoints };

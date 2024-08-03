@@ -1,10 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import LectureContent from "@/components/LectureContent";
-import { fetchLectureContent, fetchYouTubeVideo } from "@/lib/api";
+import {
+  fetchLectureContent,
+  fetchYouTubeVideo,
+  fetchTitle,
+  fetchKeyPoints,
+} from "@/lib/api";
 import YouTubeVideo from "@/components/YoutubeVideo";
+import UFOPanda from "@/app/(main)/(home)/Animations/PandaInUFO.json";
+import Lottie from "lottie-react";
 
-const LecturePage = ({
+const LecturePage = ({ 
   params,
 }: {
   params: { courseId: string; lessonId: string };
@@ -12,18 +19,25 @@ const LecturePage = ({
   const { lessonId } = params;
   const [lectureContent, setLectureContent] = useState<string>("");
   const [videoId, setVideoId] = useState<string | null>(null);
+  const [title, setTitle] = useState<string>("");
+  const [keyPoints, setKeypoints] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [category, level, selectedSubject, selectedTopic] = lessonId
+    .split("_")
+    .map(decodeURIComponent);
 
   useEffect(() => {
-    const [category, level, selectedSubject, selectedTopic] = lessonId
-      .split("_")
-      .map(decodeURIComponent);
-
     const fetchData = async () => {
       try {
+        const titleResponse = await fetchTitle(selectedTopic);
+        setTitle(titleResponse);
+
+        const keyPointsResponse = await fetchKeyPoints(selectedTopic);
+        setKeypoints(keyPointsResponse);
+
         const lectureContentResponse = await fetchLectureContent(
-          selectedSubject,
+          selectedTopic,
           level
         );
         setLectureContent(lectureContentResponse);
@@ -44,11 +58,56 @@ const LecturePage = ({
   if (error) return <p>Error: {error}</p>;
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="mt-12">
-          <LectureContent content={lectureContent} />
-          {videoId ? <YouTubeVideo videoId={videoId} /> : <p>No video found</p>}
+    <section className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white">
+      <div className="flex items-center justify-between w-full max-w-4xl p-6 bg-[#9570FF] rounded-[30px] mb-5">
+        <div>
+          <h1 className="text-3xl font-bold text-white">
+            {title || `What Are ${selectedTopic}`}
+          </h1>
+          <p className="mt-2 text-white text-xl">
+            {category} - {level}
+          </p>
+        </div>
+        <Lottie animationData={UFOPanda} loop={true} />
+      </div>
+
+      <div className="bg-background flex items-center justify-between w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10">
+        <div className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-3xl font-bold">Key Points</h2>
+          </div>
+          <div className="grid gap-3 text-xl">
+            <LectureContent content={keyPoints} />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-background flex items-center justify-between w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10">
+        <div className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-3xl font-bold">What are {title}?</h2>
+          </div>
+          <div className="grid gap-3 text-xl">
+            <LectureContent content={lectureContent} />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-background flex items-center justify-between w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10">
+        <div className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-3xl font-bold">Video</h2>
+          </div>
+          <div className="grid gap-3">
+            {videoId ? (
+                <YouTubeVideo
+                  videoId={videoId}
+                  className="lg:w-[850px] lg:h-[600px] sm:w-[580px] md:w-[700px]"
+                />
+            ) : (
+              <p>No video found</p>
+            )}
+          </div>
         </div>
       </div>
     </section>
