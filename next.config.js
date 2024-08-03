@@ -8,6 +8,7 @@ module.exports = {
     ],
   },
   webpack: (config) => {
+    config.resolve.alias.unfetch = 'node-fetch';
     config.module.rules.push({
       test: /\.(mp3)$/,
       use: {
