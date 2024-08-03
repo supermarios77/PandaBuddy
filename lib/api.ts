@@ -32,5 +32,43 @@ const fetchKeyPoints = async (topic: string) => {
   return response.output.trim();
 };
 
+const fetchMultipleChoiceExerciseData = async (topic: string) => {
+  const prompt = `
+    Generate a multiple-choice question on the topic of ${topic}. Include the question, four options, and the correct option ID.
+    Format the response as:
+    {
+      "type": "multiple-choice",
+      "question": "string",
+      "options": [{ "id": "string", "text": "string" }],
+      "correctOptionId": "string"
+    }
+  `;
+  const response = await postRequest(prompt);
+  return JSON.parse(response.output.trim());
+};
 
-export { fetchLectureContent, fetchYouTubeVideo, fetchTitle, fetchKeyPoints };
+const fetchFillInTheBlankExerciseData = async (topic: string) => {
+  const prompt = `
+    Generate a fill-in-the-blank question on the topic of ${topic}. Include the question and the correct answer.
+    Format the response as:
+    {
+      "type": "fill-in-the-blank",
+      "question": "string",
+      "correctAnswer": "string"
+    }
+  `;
+  const response = await postRequest(prompt);
+  return JSON.parse(response.output.trim());
+};
+
+const validateAnswer = async (userAnswer: string, correctAnswer: string) => {
+  const prompt = `
+    Validate if the user answer "${userAnswer}" is correct for the question with the correct answer "${correctAnswer}".
+    Consider different wordings, synonyms, and possible typos.
+    Respond with "true" or "false".
+  `;
+  const response = await postRequest(prompt);
+  return response.output.trim().toLowerCase() === "true";
+};
+
+export { fetchLectureContent, fetchYouTubeVideo, fetchTitle, fetchKeyPoints, fetchMultipleChoiceExerciseData, fetchFillInTheBlankExerciseData, validateAnswer };
