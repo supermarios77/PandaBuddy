@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const HomeLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <div className="dark:bg-black flex flex-col min-h-screen">
+      <div className="dark:bg-black flex flex-col min-h-screen" suppressHydrationWarning>
         <Navbar />
         <main className="flex-grow">{children}</main>
         <Footer />

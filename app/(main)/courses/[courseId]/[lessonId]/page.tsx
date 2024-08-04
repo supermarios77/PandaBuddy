@@ -7,8 +7,10 @@ import UFOPanda from "@/app/(main)/(home)/Animations/PandaInUFO.json";
 import Lottie from "lottie-react";
 import MultipleChoiceExercise from "@/components/MultipleChoiceExercise";
 import FillInTheBlankExercise from "@/components/FillInTheBlankExercise";
+import { useRouter } from "next/navigation";
 
 const LecturePage = ({ params }: { params: { courseId: string; lessonId: string } }) => {
+  const router = useRouter()
   const { lessonId } = params;
   const [lectureContent, setLectureContent] = useState<string>("");
   const [videoId, setVideoId] = useState<string | null>(null);
@@ -18,6 +20,7 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
   const [fillInTheBlankExercises, setFillInTheBlankExercises] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [lectureCompleted, setLectureCompleted] = useState<boolean>(false);
   const [category, level, selectedSubject, selectedTopic] = lessonId.split("_").map(decodeURIComponent);
 
   useEffect(() => {
@@ -51,11 +54,17 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
     fetchData();
   }, [lessonId]);
 
+  const handleLectureCompletion = () => {
+    setLectureCompleted(true);
+    router.push(`/courses/${params.courseId}/${lessonId}/unit-test`);
+  };
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
   return (
     <section className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white">
+
       <div className="flex items-center justify-between w-full max-w-4xl p-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-[30px] mb-5">
         <div>
           <h1 className="text-3xl font-bold text-white">
@@ -144,6 +153,14 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
           <p>No fill in the blank exercises found</p>
         )}
       </div>
+
+      <button
+        className="px-4 py-2 mt-5 text-white bg-blue-600 rounded hover:bg-blue-700"
+        onClick={handleLectureCompletion}
+      >
+        Complete Lecture and Continue to Unit Test
+      </button>
+
     </section>
   );
 };
