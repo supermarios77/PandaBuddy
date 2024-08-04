@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import LectureContent from "@/components/LectureContent";
 import { fetchLectureContent, fetchYouTubeVideo, fetchTitle, fetchKeyPoints, fetchMultipleChoiceExerciseData, fetchFillInTheBlankExerciseData } from "@/lib/api";
 import YouTubeVideo from "@/components/YoutubeVideo";
@@ -8,9 +8,10 @@ import Lottie from "lottie-react";
 import MultipleChoiceExercise from "@/components/MultipleChoiceExercise";
 import FillInTheBlankExercise from "@/components/FillInTheBlankExercise";
 import { useRouter } from "next/navigation";
+import { createCourse } from "@/lib/firestoreFunctions";
 
 const LecturePage = ({ params }: { params: { courseId: string; lessonId: string } }) => {
-  const router = useRouter()
+  const router = useRouter();
   const { lessonId } = params;
   const [lectureContent, setLectureContent] = useState<string>("");
   const [videoId, setVideoId] = useState<string | null>(null);
@@ -59,12 +60,29 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
     router.push(`/courses/${params.courseId}/${lessonId}/unit-test`);
   };
 
+  const handleCreateCourse = async () => {
+    const newCourse = {
+      title: title || `What Are ${selectedTopic}`,
+      category,
+      level,
+      selectedSubject,
+      selectedTopic,
+      lectureContent,
+      videoId,
+      keyPoints,
+      multipleChoiceExercises,
+      fillInTheBlankExercises,
+    };
+
+    await createCourse(newCourse);
+    console.log("Course created successfully");
+  };
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
   return (
     <section className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white">
-
       <div className="flex items-center justify-between w-full max-w-4xl p-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-[30px] mb-5">
         <div>
           <h1 className="text-3xl font-bold text-white">
@@ -161,6 +179,12 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
         Complete Lecture and Continue to Unit Test
       </button>
 
+      <button
+        className="px-4 py-2 mt-5 text-white bg-green-600 rounded hover:bg-green-700"
+        onClick={handleCreateCourse}
+      >
+        Save Course
+      </button>
     </section>
   );
 };
