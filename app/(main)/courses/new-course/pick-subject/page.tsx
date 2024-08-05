@@ -36,11 +36,8 @@ export default function PickYourSubject() {
   }, [level, category]);
 
   const handleSubjectSelect = (selectedSubject: string) => {
-    const courseId = new Date().getTime(); // Generate a unique ID for the course
-    const encodedSubject = encodeURIComponent(selectedSubject);
-    router.push(
-      `/courses/new-course/pick-topic?category=${encodeURIComponent(category)}&level=${encodeURIComponent(level)}&subject=${encodedSubject}`
-    );
+    const courseId = `${category}_${level}_${selectedSubject}`.replace(/\s/g, '-');
+    router.push(`/courses/${courseId}/`);
   };
 
   return (

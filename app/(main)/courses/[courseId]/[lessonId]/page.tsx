@@ -74,7 +74,7 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
       fillInTheBlankExercises,
     };
 
-    await createCourse(newCourse);
+    // await createCourse(newCourse);
     console.log("Course created successfully");
   };
 

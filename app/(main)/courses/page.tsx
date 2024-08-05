@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import Link from "next/link";
 
 type Course = {
+  category: string;
   id: string;
   subject: string;
   level: string;
@@ -44,13 +45,12 @@ export default function Courses() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-5xl mt-12">
         {courses.map((course) => (
-          <Card
-            key={course.id}
-            className="bg-primary text-primary-foreground p-6 flex flex-col items-start"
-          >
-            <h3 className="text-2xl font-bold">{course.subject}</h3>
-            <p className="text-lg font-medium">{course.level}</p>
-          </Card>
+          <Link href={`/courses/${course.id}`} key={course.id}>
+            <Card className="bg-primary text-primary-foreground p-6 flex flex-col items-start">
+              <h3 className="text-2xl font-bold">{course.category}</h3>
+              <p className="text-lg font-medium">{course.level}</p>
+            </Card>
+          </Link>
         ))}
       </div>
     </div>
