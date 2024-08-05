@@ -1,35 +1,33 @@
 import { db } from './firebaseConfig';
-import { collection, addDoc, doc, setDoc, getDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, getDoc, getDocs, query, where } from 'firebase/firestore';
 
-// Function to create a new course document
-const createCourse = async (courseId: any, courseData: any) => {
+const createCourse = async (courseId: string, courseData: any) => {
   try {
     const docRef = doc(db, "courses", courseId);
     await setDoc(docRef, courseData);
-    console.log("Course successfully written!");
+    console.log("Course successfully written!", courseData);
   } catch (e) {
     console.error("Error adding course document: ", e);
   }
 };
 
-// Function to create a new lesson in a specific course
-const createLessons = async (courseId: any, lessonData: any) => {
+const createLesson = async (courseId: string, lessonData: any) => {
   try {
-    const lessonsCollectionRef = collection(db, "courses", courseId, "lessons");
+    const lessonsCollectionRef = collection(db, `courses/${courseId}/lessons`);
     const docRef = await addDoc(lessonsCollectionRef, lessonData);
-    console.log('Lesson written with ID: ', docRef.id);
+    console.log('Lesson written with ID: ', docRef.id, lessonData);
   } catch (e) {
     console.error('Error adding lesson document: ', e);
   }
 };
 
-
-const fetchCourseData = async (courseId: any) => {
+const fetchCourseData = async (courseId: string) => {
   try {
     const docRef = doc(db, "courses", courseId);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
+      console.log("Course data fetched: ", docSnap.data());
       return docSnap.data();
     } else {
       console.log("No such course document found!");
@@ -41,43 +39,28 @@ const fetchCourseData = async (courseId: any) => {
   }
 };
 
-const fetchLessonData = async (lessonId: any, courseId: any) => {
+const fetchLessonData = async (courseId: string, selectedTopic: string) => {
   try {
-    const docRef = doc(db, "courses", courseId, "lessons", lessonId);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      return docSnap.data();
-    } else {
-      console.log("No such lesson document found!");
-      return null;
-    }
-  } catch (e) {
-    console.error("Error fetching lesson document: ", e);
-    return null;
-  }
-};
-
-const fetchLessonsForCourse = async (courseId: any) => {
-  try {
-    const lessonsCollectionRef = collection(db, "courses", courseId, "lessons");
-    const querySnapshot = await getDocs(lessonsCollectionRef);
+    const lessonsCollectionRef = collection(db, `courses/${courseId}/lessons`);
+    const q = query(lessonsCollectionRef, where("selectedTopic", "==", selectedTopic));
+    const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      console.log("No lessons found for this course!");
+      console.log("No lessons found for this topic!");
       return null;
     }
 
     const lessons: any = [];
     querySnapshot.forEach(doc => {
-      lessons.push(doc.data());
+      lessons.push({ id: doc.id, ...doc.data() });
     });
 
-    return lessons;
+    console.log("Lesson data fetched: ", lessons[0]);
+    return lessons[0];
   } catch (e) {
     console.error("Error fetching lessons: ", e);
     return null;
   }
 };
 
-export { createCourse, createLessons, fetchCourseData, fetchLessonData, fetchLessonsForCourse };
+export { createCourse, createLesson, fetchCourseData, fetchLessonData };

@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import Link from "next/link";
 
 type Course = {
+  title: any;
   category: string;
   id: string;
   subject: string;
@@ -43,12 +44,20 @@ export default function Courses() {
           </Button>
         </Link>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-5xl mt-12">
+      <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-5xl mt-12">
         {courses.map((course) => (
           <Link href={`/courses/${course.id}`} key={course.id}>
-            <Card className="bg-primary text-primary-foreground p-6 flex flex-col items-start">
-              <h3 className="text-2xl font-bold">{course.category}</h3>
-              <p className="text-lg font-medium">{course.level}</p>
+            <Card className="bg-card text-primary p-6 flex flex-col items-start">
+              <h3 className="text-2xl font-bold">
+                {course.title
+                  .split("\n")
+                  .map((topic: string) => topic.replace(/[*-1234567890]/g, "").trim())
+                  .filter((topic: string | any[]) => topic.length > 0)
+                  .sort()}
+              </h3>
+              <p className="text-lg font-medium">
+                {course.level} / {course.category}
+              </p>
             </Card>
           </Link>
         ))}

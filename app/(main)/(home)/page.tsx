@@ -6,7 +6,7 @@ import UFOPanda from "./Animations/PandaInUFO.json";
 
 import Mascot from "./Components/Mascot";
 import Cards from "@/components/Card";
-import { ActivityIcon, BookIcon, ShoppingCart } from "lucide-react";
+import { ActivityIcon, BookIcon, Pencil, ShoppingCart } from "lucide-react";
 
 const HomePage = () => {
   const [time, setTime] = useState("");
@@ -49,7 +49,7 @@ const HomePage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-4xl mb-[50px]">
         <Cards link="/shop" icon={<ShoppingCart />} title="Shop" description="Buy Hearts"/>
         <Cards link="/notes" icon={<BookIcon />} title="Notes" description="Manage your notes"/>
-        <Cards link="/progress" icon={<ActivityIcon />} title="Progress" description="Track your progress"/>
+        <Cards link="/courses" icon={<Pencil />} title="Study" description="Make Pandy happy by studying!"/>
       </div>
 
     </section>

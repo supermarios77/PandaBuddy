@@ -35,7 +35,6 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
 
           setTopics(cleanedTopics);
 
-          // Save the course with generated topics
           const courseData = {
             title: selectedSubject,
             category,
@@ -53,18 +52,34 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
   }, [courseId, level, category, selectedSubject]);
 
   const handleTopicSelect = (selectedTopic: string) => {
-    const lessonId = `${category}_${level}_${selectedSubject}_${selectedTopic}`.replace(/\s/g, "-");
+    const lessonId =
+      `${category}_${level}_${selectedSubject}_${selectedTopic}`.replace(
+        /\s/g,
+        "-"
+      );
     router.push(`/courses/${courseId}/${encodeURIComponent(lessonId)}`);
   };
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-            Your Lessons
-          </h2>
+    <section className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white">
+      <div className="flex items-center justify-between w-full max-w-5xl p-6 bg-gradient-to-r from-green-500 to-cyan-500 rounded-[30px] mb-5 pt-[50px] pb-[50px]">
+        <div>
+          <h1 className="text-3xl font-bold text-white">
+            {selectedSubject
+              .split("\n")
+              .map((topic: string) =>
+                topic.replace(/[*-1234567890]/g, "").trim()
+              )
+              .filter((topic: string | any[]) => topic.length > 0)
+              .sort()}
+          </h1>
+          <p className="mt-2 text-white text-xl">
+            {category} - {level}
+          </p>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between w-full max-w-5xl">
         <div className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-3 lg:gap-8">
           {topics.map((topic, index) => (
             <div
@@ -72,7 +87,12 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
               className="flex items-center justify-center rounded-lg bg-white p-6 text-center text-black transition-colors hover:bg-gray-200 shadow-lg cursor-pointer"
               onClick={() => handleTopicSelect(topic)}
             >
-              <h3 className="text-2xl font-bold">{topic}</h3>
+              <h3 className="text-2xl font-bold">{topic.split("\n")
+              .map((topic: string) =>
+                topic.replace(/[.1234567890]/g, "").trim()
+              )
+              .filter((topic: string | any[]) => topic.length > 0)
+              .sort()}</h3>
             </div>
           ))}
         </div>

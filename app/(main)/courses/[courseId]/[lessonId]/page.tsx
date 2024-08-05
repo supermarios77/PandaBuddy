@@ -8,7 +8,7 @@ import Lottie from "lottie-react";
 import MultipleChoiceExercise from "@/components/MultipleChoiceExercise";
 import FillInTheBlankExercise from "@/components/FillInTheBlankExercise";
 import { useRouter } from "next/navigation";
-import { createCourse } from "@/lib/firestoreFunctions";
+import { createCourse, fetchLessonData, createLesson } from "@/lib/firestoreFunctions";
 
 const LecturePage = ({ params }: { params: { courseId: string; lessonId: string } }) => {
   const router = useRouter();
@@ -26,26 +26,52 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log("Fetching data for lessonId:", lessonId);
       try {
-        const titleResponse = await fetchTitle(selectedTopic);
-        setTitle(titleResponse);
+        const existingLesson = await fetchLessonData(params.courseId, selectedTopic);
+        if (existingLesson) {
+          console.log("Existing lesson found:", existingLesson);
+          setTitle(existingLesson.title);
+          setKeypoints(existingLesson.keyPoints);
+          setLectureContent(existingLesson.lectureContent);
+          setVideoId(existingLesson.videoId);
+          setMultipleChoiceExercises(existingLesson.multipleChoiceExercises);
+          setFillInTheBlankExercises(existingLesson.fillInTheBlankExercises);
+        } else {
+          console.log("No existing lesson found. Fetching new data...");
+          const titleResponse = await fetchTitle(selectedTopic);
+          setTitle(titleResponse);
 
-        const keyPointsResponse = await fetchKeyPoints(selectedTopic);
-        setKeypoints(keyPointsResponse);
+          const keyPointsResponse = await fetchKeyPoints(selectedTopic);
+          setKeypoints(keyPointsResponse);
 
-        const lectureContentResponse = await fetchLectureContent(selectedTopic, level);
-        setLectureContent(lectureContentResponse);
+          const lectureContentResponse = await fetchLectureContent(selectedTopic, level);
+          setLectureContent(lectureContentResponse);
 
-        const videoResponse = await fetchYouTubeVideo(selectedTopic, level);
-        setVideoId(videoResponse);
+          const videoResponse = await fetchYouTubeVideo(selectedTopic, level);
+          setVideoId(videoResponse);
 
-        const multipleChoiceResponse = await fetchMultipleChoiceExerciseData(selectedTopic);
-        setMultipleChoiceExercises([multipleChoiceResponse]);
+          const multipleChoiceResponse = await fetchMultipleChoiceExerciseData(selectedTopic);
+          setMultipleChoiceExercises([multipleChoiceResponse]);
 
-        const fillInTheBlankResponse = await fetchFillInTheBlankExerciseData(selectedTopic);
-        setFillInTheBlankExercises([fillInTheBlankResponse]);
+          const fillInTheBlankResponse = await fetchFillInTheBlankExerciseData(selectedTopic);
+          setFillInTheBlankExercises([fillInTheBlankResponse]);
+
+          const newLesson = {
+            title: titleResponse,
+            selectedTopic,
+            lectureContent: lectureContentResponse,
+            videoId: videoResponse,
+            keyPoints: keyPointsResponse,
+            multipleChoiceExercises: [multipleChoiceResponse],
+            fillInTheBlankExercises: [fillInTheBlankResponse],
+          };
+
+          await createLesson(params.courseId, newLesson);
+          console.log("New lesson created and saved:", newLesson);
+        }
       } catch (error) {
-        console.log(error);
+        console.error("Error fetching data:", error);
         setError("Failed to load data");
       } finally {
         setLoading(false);
@@ -53,30 +79,7 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
     };
 
     fetchData();
-  }, [lessonId]);
-
-  const handleLectureCompletion = () => {
-    setLectureCompleted(true);
-    router.push(`/courses/${params.courseId}/${lessonId}/unit-test`);
-  };
-
-  const handleCreateCourse = async () => {
-    const newCourse = {
-      title: title || `What Are ${selectedTopic}`,
-      category,
-      level,
-      selectedSubject,
-      selectedTopic,
-      lectureContent,
-      videoId,
-      keyPoints,
-      multipleChoiceExercises,
-      fillInTheBlankExercises,
-    };
-
-    // await createCourse(newCourse);
-    console.log("Course created successfully");
-  };
+  }, [lessonId, params.courseId, selectedTopic, level]);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
@@ -171,20 +174,6 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
           <p>No fill in the blank exercises found</p>
         )}
       </div>
-
-      <button
-        className="px-4 py-2 mt-5 text-white bg-blue-600 rounded hover:bg-blue-700"
-        onClick={handleLectureCompletion}
-      >
-        Complete Lecture and Continue to Unit Test
-      </button>
-
-      <button
-        className="px-4 py-2 mt-5 text-white bg-green-600 rounded hover:bg-green-700"
-        onClick={handleCreateCourse}
-      >
-        Save Course
-      </button>
     </section>
   );
 };
