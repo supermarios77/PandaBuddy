@@ -1,5 +1,6 @@
 "use client";
 import { fetchCourseData, createCourse } from "@/lib/firestoreFunctions";
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -10,12 +11,13 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
   const [category, level, selectedSubject] = courseId
     .split("_")
     .map(decodeURIComponent);
-  const [title, setTitle] = useState<string>("");
+  const { user } = useUser();
+  const userId = user?.id;
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const courseData = await fetchCourseData(courseId);
+        const courseData = await fetchCourseData(courseId, String(userId));
         if (courseData) {
           setTopics(courseData.topics);
         } else {
@@ -41,7 +43,7 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
             level,
             topics: cleanedTopics,
           };
-          await createCourse(courseId, courseData);
+          await createCourse(courseId, courseData, String(userId));
         }
       } catch (error) {
         console.error("Error fetching course data:", error);
@@ -68,7 +70,7 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
             {selectedSubject
               .split("\n")
               .map((topic: string) =>
-                topic.replace(/[*-1234567890]/g, "").trim()
+                topic.replace(/[*-1234567890]/g, " ").trim()
               )
               .filter((topic: string | any[]) => topic.length > 0)
               .sort()}
@@ -87,12 +89,15 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
               className="flex items-center justify-center rounded-lg bg-white p-6 text-center text-black transition-colors hover:bg-gray-200 shadow-lg cursor-pointer"
               onClick={() => handleTopicSelect(topic)}
             >
-              <h3 className="text-2xl font-bold">{topic.split("\n")
-              .map((topic: string) =>
-                topic.replace(/[.1234567890]/g, "").trim()
-              )
-              .filter((topic: string | any[]) => topic.length > 0)
-              .sort()}</h3>
+              <h3 className="text-2xl font-bold">
+                {topic
+                  .split("\n")
+                  .map((topic: string) =>
+                    topic.replace(/[.1234567890]/g, "").trim()
+                  )
+                  .filter((topic: string | any[]) => topic.length > 0)
+                  .sort()}
+              </h3>
             </div>
           ))}
         </div>

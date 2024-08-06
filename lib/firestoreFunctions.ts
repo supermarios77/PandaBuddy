@@ -1,9 +1,9 @@
 import { db } from './firebaseConfig';
 import { collection, addDoc, doc, setDoc, getDoc, getDocs, query, where } from 'firebase/firestore';
 
-const createCourse = async (courseId: string, courseData: any) => {
+const createCourse = async (courseId: string, courseData: any, userId: string) => {
   try {
-    const docRef = doc(db, "courses", courseId);
+    const docRef = doc(db, `courses/${userId}/userCourses`, courseId);
     await setDoc(docRef, courseData);
     console.log("Course successfully written!", courseData);
   } catch (e) {
@@ -11,9 +11,9 @@ const createCourse = async (courseId: string, courseData: any) => {
   }
 };
 
-const createLesson = async (courseId: string, lessonData: any) => {
+const createLesson = async (courseId: string, lessonData: any, userId: string) => {
   try {
-    const lessonsCollectionRef = collection(db, `courses/${courseId}/lessons`);
+    const lessonsCollectionRef = collection(db, `courses/${userId}/userCourses/${courseId}/lessons`);
     const docRef = await addDoc(lessonsCollectionRef, lessonData);
     console.log('Lesson written with ID: ', docRef.id, lessonData);
   } catch (e) {
@@ -21,9 +21,9 @@ const createLesson = async (courseId: string, lessonData: any) => {
   }
 };
 
-const fetchCourseData = async (courseId: string) => {
+const fetchCourseData = async (courseId: string, userId: string) => {
   try {
-    const docRef = doc(db, "courses", courseId);
+    const docRef = doc(db, `courses/${userId}/userCourses`, courseId);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -39,9 +39,9 @@ const fetchCourseData = async (courseId: string) => {
   }
 };
 
-const fetchLessonData = async (courseId: string, selectedTopic: string) => {
+const fetchLessonData = async (courseId: string, selectedTopic: string, userId: string) => {
   try {
-    const lessonsCollectionRef = collection(db, `courses/${courseId}/lessons`);
+    const lessonsCollectionRef = collection(db, `courses/${userId}/userCourses/${courseId}/lessons`);
     const q = query(lessonsCollectionRef, where("selectedTopic", "==", selectedTopic));
     const querySnapshot = await getDocs(q);
 

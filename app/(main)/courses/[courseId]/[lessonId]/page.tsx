@@ -9,6 +9,7 @@ import MultipleChoiceExercise from "@/components/MultipleChoiceExercise";
 import FillInTheBlankExercise from "@/components/FillInTheBlankExercise";
 import { useRouter } from "next/navigation";
 import { createCourse, fetchLessonData, createLesson } from "@/lib/firestoreFunctions";
+import { useUser } from "@clerk/nextjs";
 
 const LecturePage = ({ params }: { params: { courseId: string; lessonId: string } }) => {
   const router = useRouter();
@@ -21,14 +22,16 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
   const [fillInTheBlankExercises, setFillInTheBlankExercises] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [lectureCompleted, setLectureCompleted] = useState<boolean>(false);
   const [category, level, selectedSubject, selectedTopic] = lessonId.split("_").map(decodeURIComponent);
+
+  const { user }= useUser()
+  const userId = user?.id
 
   useEffect(() => {
     const fetchData = async () => {
       console.log("Fetching data for lessonId:", lessonId);
       try {
-        const existingLesson = await fetchLessonData(params.courseId, selectedTopic);
+        const existingLesson = await fetchLessonData(params.courseId, selectedTopic, String(userId));
         if (existingLesson) {
           console.log("Existing lesson found:", existingLesson);
           setTitle(existingLesson.title);
@@ -67,7 +70,7 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
             fillInTheBlankExercises: [fillInTheBlankResponse],
           };
 
-          await createLesson(params.courseId, newLesson);
+          await createLesson(params.courseId, newLesson, String(userId));
           console.log("New lesson created and saved:", newLesson);
         }
       } catch (error) {
