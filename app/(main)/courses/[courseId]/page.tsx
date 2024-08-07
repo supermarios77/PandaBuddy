@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "@/components/ui/button";
 import { fetchCourseData, createCourse } from "@/lib/firestoreFunctions";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -64,7 +65,7 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
 
   return (
     <section className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white">
-      <div className="flex items-center justify-between w-full max-w-5xl p-6 bg-gradient-to-r from-green-500 to-cyan-500 rounded-[30px] mb-5 pt-[50px] pb-[50px]">
+      <div className="flex items-center justify-between w-full max-w-5xl p-6 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-[30px] mb-5 pt-[50px] pb-[50px]">
         <div>
           <h1 className="text-3xl font-bold text-white">
             {selectedSubject
@@ -79,6 +80,13 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
             {category} - {level}
           </p>
         </div>
+        <Button
+          variant="secondary"
+          className="bg-white text-black dark:hover:bg-gray-200"
+          onClick={() => router.push(`/${courseId}/mini-game`)}
+        >
+          Start Mini-Game
+        </Button>
       </div>
 
       <div className="flex items-center justify-between w-full max-w-5xl">

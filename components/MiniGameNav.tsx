@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import { Progress } from "./ui/progress";
 
-interface ChallengeNavProps {
+interface MiniGameNavProps {
   score: number;
   numberOfHearts: any;
 }
 
-const ChallengeNav: React.FC<ChallengeNavProps> = ({
+const MiniGameNav: React.FC<MiniGameNavProps> = ({
   score,
   numberOfHearts,
 }) => {
@@ -37,4 +37,4 @@ const ChallengeNav: React.FC<ChallengeNavProps> = ({
   );
 };
 
-export default ChallengeNav;
+export default MiniGameNav;
