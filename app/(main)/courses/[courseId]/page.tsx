@@ -3,7 +3,6 @@ import { fetchCourseData, createCourse } from "@/lib/firestoreFunctions";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { DotLoader } from "react-spinners";
 
 const CoursePage = ({ params }: { params: { courseId: string } }) => {
   const { courseId } = params;
@@ -12,7 +11,6 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
   const [category, level, selectedSubject] = courseId
     .split("_")
     .map(decodeURIComponent);
-  const [loading, setLoading] = useState<boolean>(true);
   const { user } = useUser();
   const userId = user?.id;
 
@@ -22,7 +20,6 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
         const courseData = await fetchCourseData(courseId, String(userId));
         if (courseData) {
           setTopics(courseData.topics);
-          setLoading(false)
         } else {
           const response = await fetch("/api/generate", {
             method: "POST",
@@ -47,11 +44,9 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
             topics: cleanedTopics,
           };
           await createCourse(courseId, courseData, String(userId));
-          setLoading(false)
         }
       } catch (error) {
         console.error("Error fetching course data:", error);
-        setLoading(false)
       }
     };
 
@@ -66,8 +61,6 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
       );
     router.push(`/courses/${courseId}/${encodeURIComponent(lessonId)}`);
   };
-
-  if (loading) return <div className="flex justify-center align-middle mt-[200px]"><DotLoader /></div>;
 
   return (
     <section className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white">

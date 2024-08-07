@@ -9,8 +9,7 @@ import MultipleChoiceExercise from "@/components/MultipleChoiceExercise";
 import FillInTheBlankExercise from "@/components/FillInTheBlankExercise";
 import { useRouter } from "next/navigation";
 import { createCourse, fetchLessonData, createLesson } from "@/lib/firestoreFunctions";
-import { useUser } from "@clerk/nextjs"
-import { DotLoader } from "react-spinners";
+import { useUser } from "@clerk/nextjs";
 
 const LecturePage = ({ params }: { params: { courseId: string; lessonId: string } }) => {
   const router = useRouter();
@@ -85,8 +84,8 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
     fetchData();
   }, [lessonId, params.courseId, selectedTopic, level]);
 
-  if (loading) return <div className="flex justify-center align-middle mt-[200px]"><DotLoader /></div>;
-  if (error) return <p className="text-center flex justify-center align-middle">Error: {error}</p>;
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <section className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white">
