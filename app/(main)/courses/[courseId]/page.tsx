@@ -83,7 +83,7 @@ const CoursePage = ({ params }: { params: { courseId: string } }) => {
         <Button
           variant="secondary"
           className="bg-white text-black dark:hover:bg-gray-200"
-          onClick={() => router.push(`/${courseId}/mini-game`)}
+          onClick={() => router.push(`/courses/${courseId}/mini-game`)}
         >
           Start Mini-Game
         </Button>

@@ -1,20 +1,20 @@
-import fetch from 'isomorphic-unfetch';
-
-const API_URL = '/api/generate';
-
-export const postRequest = async (prompt: string) => {
+export async function postRequest(prompt: string) {
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch('/api/generate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ body: prompt }),
+      body: JSON.stringify({ prompt }),
     });
-    const data = await response.json();
-    return data;
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
   } catch (error) {
     console.error('API request failed:', error);
-    return null;
+    throw error;
   }
-};
+}
