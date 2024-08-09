@@ -18,7 +18,7 @@ import {
 } from "@radix-ui/react-icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { db } from "@/lib/firebaseConfig";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, setDoc, getDoc } from "firebase/firestore";
 import { useUser } from "@clerk/nextjs";
 import { TrophyIcon } from "lucide-react";
 
@@ -77,10 +77,15 @@ export default function QuizGame({ questions }: QuizGameProps) {
 
     setIsSaving(true);
     try {
-      await addDoc(collection(db, "userPoints"), {
-        userId: user.id,
-        points: score,
-        timestamp: new Date(),
+      const userPointsDoc = doc(db, "userPoints", String(user.id));
+
+      const docSnap = await getDoc(userPointsDoc);
+      let currentPoints = docSnap.exists() ? docSnap.data().points || 0 : 0;
+
+      const newTotalPoints = currentPoints + score;
+
+      await setDoc(userPointsDoc, {
+        points: newTotalPoints,
       });
       console.log("Score saved successfully");
     } catch (error) {
@@ -201,10 +206,7 @@ export default function QuizGame({ questions }: QuizGameProps) {
               {Math.round(progress)}% Complete
             </div>
           </div>
-          <Progress
-            value={progress}
-            className="w-full h-2 bg-purple-300"
-          />
+          <Progress value={progress} className="w-full h-2 bg-purple-300" />
           <CardDescription className="mt-4 text-base sm:text-lg text-purple-100">
             {questions[currentQuestion].question}
           </CardDescription>

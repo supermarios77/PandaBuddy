@@ -39,7 +39,7 @@ const QuizPage = ({ params }: { params: { courseId: string } }) => {
 
   if (loading) {
     return (
-      <Card className="w-full max-w-md mx-auto">
+      <Card className="w-full max-w-md mx-auto mt-20">
         <CardHeader>
           <CardTitle>Loading...</CardTitle>
           <CardDescription>
@@ -52,7 +52,7 @@ const QuizPage = ({ params }: { params: { courseId: string } }) => {
 
   if (error) {
     return (
-      <Card className="w-full max-w-md mx-auto">
+      <Card className="w-full max-w-md mx-auto mt-20">
         <CardHeader>
           <CardTitle>Quiz Error</CardTitle>
           <CardDescription>{error}</CardDescription>
