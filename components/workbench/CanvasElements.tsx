@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Image as KonvaImage, Text, Circle, Rect, Line, Transformer } from 'react-konva';
 import { CanvasElement } from '@/types/workbench';
@@ -9,6 +8,7 @@ interface CanvasElementsProps {
   tool: string;
   onSelect: (id: string | null) => void;
   onUpdate: (id: string, updates: Partial<CanvasElement>) => void;
+  onDelete: (id: string) => void;
 }
 
 const CanvasElements: React.FC<CanvasElementsProps> = ({
@@ -17,6 +17,7 @@ const CanvasElements: React.FC<CanvasElementsProps> = ({
   tool,
   onSelect,
   onUpdate,
+  onDelete,
 }) => {
   const transformerRef = useRef<any>(null);
 

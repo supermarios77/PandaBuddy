@@ -1,14 +1,14 @@
-"use client"
-import React, { useCallback } from 'react';
+"use client";
+import React, { useCallback, useEffect } from 'react';
 import { Stage, Layer, Line } from 'react-konva';
+import { Toaster, toast } from 'react-hot-toast';
 import useWorkbenchState from '@/hooks/useWorkbenchState';
 import useFirestoreWorkbench from '@/hooks/useFirestoreWorkbench';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import CanvasSettings from '@/components/workbench/CanvasSettings';
 import CanvasElements from '@/components/workbench/CanvasElements';
+import CanvasSettings from '@/components/workbench/CanvasSettings';
 import Toolbar from '@/components/workbench/Toolbar';
-import { Toaster, toast } from 'react-hot-toast';
 
 const CreativeWorkbench: React.FC = () => {
   const {
@@ -28,6 +28,7 @@ const CreativeWorkbench: React.FC = () => {
     handleAddSticker,
     handleAddText,
     handleAddShape,
+    handleDeleteElement,
     handleUndo,
     handleRedo,
     handleToolChange,
@@ -70,6 +71,20 @@ const CreativeWorkbench: React.FC = () => {
     }
   }, [loadWorkbench, setCanvasElements, setBackgroundColor, setCanvasSize]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' && selectedId) {
+        handleDeleteElement(selectedId);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedId, handleDeleteElement]);
+
   return (
     <div className="creative-workbench p-4 max-w-7xl mx-auto">
       <Toaster position="top-right" />
@@ -96,6 +111,11 @@ const CreativeWorkbench: React.FC = () => {
             <CardContent className="space-y-2 pt-6">
               <Button onClick={handleSave} className="w-full">Save Workbench</Button>
               <Button onClick={handleLoad} className="w-full">Load Workbench</Button>
+              {selectedId && (
+                <Button onClick={() => handleDeleteElement(selectedId)} className="w-full bg-red-500 hover:bg-red-600">
+                  Delete Selected Element
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -116,6 +136,9 @@ const CreativeWorkbench: React.FC = () => {
                 onMouseDown={handleMouseDown}
                 onMousemove={handleMouseMove}
                 onMouseup={handleMouseUp}
+                onTouchStart={handleMouseDown}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={handleMouseUp}
                 style={{ backgroundColor }}
               >
                 <Layer>
@@ -125,17 +148,18 @@ const CreativeWorkbench: React.FC = () => {
                     tool={tool}
                     onSelect={handleSelect}
                     onUpdate={handleElementUpdate}
+                    onDelete={handleDeleteElement}
                   />
-                  {tool === 'draw' && lines.map((line, i) => (
+                  {(tool === 'draw' || tool === 'erase') && lines.map((line, i) => (
                     <Line
                       key={i}
                       points={line}
-                      stroke={drawColor}
+                      stroke={tool === 'erase' ? backgroundColor : drawColor}
                       strokeWidth={drawWidth}
                       tension={0.5}
                       lineCap="round"
                       lineJoin="round"
-                      globalCompositeOperation="source-over"
+                      globalCompositeOperation={tool === 'erase' ? 'destination-out' : 'source-over'}
                     />
                   ))}
                 </Layer>

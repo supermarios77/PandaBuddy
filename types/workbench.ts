@@ -20,8 +20,8 @@ export interface CanvasElement {
   shapeType?: 'rectangle' | 'circle';
   points?: number[];
   align?: string;
+  globalCompositeOperation?: string;
 }
-
 export interface WorkbenchData {
   canvasElements: Omit<CanvasElement, 'image'>[];
   backgroundColor: string;

@@ -3,15 +3,15 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Toggle } from '@/components/ui/toggle';
-import { PenToolIcon } from 'lucide-react';
+import { PenToolIcon, EraserIcon } from 'lucide-react';
 
 interface DrawTabProps {
-  onToolChange: (tool: 'select' | 'draw') => void;
+  onToolChange: (tool: 'select' | 'draw' | 'erase') => void;
   onDrawColorChange: (color: string) => void;
   onDrawWidthChange: (width: number) => void;
   drawColor: string;
   drawWidth: number;
-  tool: 'select' | 'draw';
+  tool: 'select' | 'draw' | 'erase';
 }
 
 const DrawTab: React.FC<DrawTabProps> = ({
@@ -33,6 +33,12 @@ const DrawTab: React.FC<DrawTabProps> = ({
           >
             <PenToolIcon className="w-4 h-4" />
           </Toggle>
+          <Toggle
+            pressed={tool === 'erase'}
+            onPressedChange={() => onToolChange('erase')}
+          >
+            <EraserIcon className="w-4 h-4" />
+          </Toggle>
         </div>
       </div>
       <div className="space-y-2">
@@ -44,16 +50,19 @@ const DrawTab: React.FC<DrawTabProps> = ({
             value={drawColor}
             onChange={(e) => onDrawColorChange(e.target.value)}
             className="w-10 h-10 p-1"
+            disabled={tool === 'erase'}
           />
           <span className="text-sm">{drawColor}</span>
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="draw-width">Draw Width: {drawWidth}px</Label>
+        <Label htmlFor="draw-width">
+          {tool === 'erase' ? 'Eraser' : 'Draw'} Width: {drawWidth}px
+        </Label>
         <Slider
           id="draw-width"
           min={1}
-          max={20}
+          max={50}
           step={1}
           value={[drawWidth]}
           onValueChange={(value) => onDrawWidthChange(value[0])}

@@ -1,5 +1,4 @@
-"use client"
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { CanvasElement, WorkbenchData } from '@/types/workbench';
 
@@ -8,12 +7,11 @@ const useWorkbenchState = () => {
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [tool, setTool] = useState<'select' | 'draw'>('select');
+  const [tool, setTool] = useState<'select' | 'draw' | 'erase'>('select');
   const [history, setHistory] = useState<CanvasElement[][]>([[]]);
   const [historyStep, setHistoryStep] = useState(0);
   const [drawColor, setDrawColor] = useState('#000000');
   const [drawWidth, setDrawWidth] = useState(2);
-  const isDrawing = useRef(false);
   const [lines, setLines] = useState<number[][]>([]);
 
   const addToHistory = useCallback((elements: CanvasElement[]) => {
@@ -112,6 +110,15 @@ const useWorkbenchState = () => {
     });
   }, [canvasSize, addToHistory]);
 
+  const handleDeleteElement = useCallback((id: string) => {
+    setCanvasElements(prevElements => {
+      const newElements = prevElements.filter(el => el.id !== id);
+      addToHistory(newElements);
+      return newElements;
+    });
+    setSelectedId(null);
+  }, [addToHistory]);
+
   const handleUndo = useCallback(() => {
     if (historyStep > 0) {
       setHistoryStep(prevStep => prevStep - 1);
@@ -126,7 +133,7 @@ const useWorkbenchState = () => {
     }
   }, [history, historyStep]);
 
-  const handleToolChange = useCallback((newTool: 'select' | 'draw') => {
+  const handleToolChange = useCallback((newTool: 'select' | 'draw' | 'erase') => {
     setTool(newTool);
   }, []);
 
@@ -139,30 +146,31 @@ const useWorkbenchState = () => {
   }, []);
 
   const handleMouseDown = useCallback((e: any) => {
-    if (tool !== 'draw') return;
-    isDrawing.current = true;
+    if (tool !== 'draw' && tool !== 'erase') return;
     const pos = e.target.getStage().getPointerPosition();
     setLines([...lines, [pos.x, pos.y]]);
   }, [tool, lines]);
 
   const handleMouseMove = useCallback((e: any) => {
-    if (!isDrawing.current) return;
+    if (tool !== 'draw' && tool !== 'erase') return;
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     let lastLine = lines[lines.length - 1];
-    lastLine = lastLine.concat([point.x, point.y]);
-    lines.splice(lines.length - 1, 1, lastLine);
-    setLines([...lines]);
-  }, [lines]);
+    if (lastLine) {
+      lastLine = lastLine.concat([point.x, point.y]);
+      lines.splice(lines.length - 1, 1, lastLine);
+      setLines([...lines]);
+    }
+  }, [tool, lines]);
 
   const handleMouseUp = useCallback(() => {
-    isDrawing.current = false;
+    if (tool !== 'draw' && tool !== 'erase') return;
     if (lines.length > 0) {
       const newElement: CanvasElement = {
         id: uuidv4(),
         type: 'freehand',
         points: lines[lines.length - 1],
-        stroke: drawColor,
+        stroke: tool === 'erase' ? backgroundColor : drawColor,
         strokeWidth: drawWidth,
         rotation: 0,
         scaleX: 1,
@@ -170,6 +178,7 @@ const useWorkbenchState = () => {
         x: 0,
         y: 0,
         opacity: 1,
+        globalCompositeOperation: tool === 'erase' ? 'destination-out' : 'source-over',
       };
       setCanvasElements(prevElements => {
         const newElements = [...prevElements, newElement];
@@ -178,7 +187,7 @@ const useWorkbenchState = () => {
       });
       setLines([]);
     }
-  }, [lines, drawColor, drawWidth, addToHistory]);
+  }, [tool, lines, drawColor, drawWidth, backgroundColor, addToHistory]);
 
   const getSerializableWorkbenchData = useCallback((): WorkbenchData => {
     const serializableElements = canvasElements.map(element => {
@@ -210,6 +219,7 @@ const useWorkbenchState = () => {
     handleAddSticker,
     handleAddText,
     handleAddShape,
+    handleDeleteElement,
     handleUndo,
     handleRedo,
     handleToolChange,

@@ -10,14 +10,13 @@ interface ToolbarProps {
   onAddSticker: (sticker: any) => void;
   onAddText: (text: string, fontSize: number, fontFamily: string, color: string) => void;
   onAddShape: (shapeType: 'rectangle' | 'circle', color: string, strokeColor: string, strokeWidth: number) => void;
-  onToolChange: (tool: 'select' | 'draw') => void;
+  onToolChange: (tool: 'select' | 'draw' | 'erase') => void;
   onDrawColorChange: (color: string) => void;
   onDrawWidthChange: (width: number) => void;
   drawColor: string;
   drawWidth: number;
-  tool: 'select' | 'draw';
+  tool: 'select' | 'draw' | 'erase';
 }
-
 const Toolbar: React.FC<ToolbarProps> = ({
   onAddSticker,
   onAddText,
