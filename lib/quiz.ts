@@ -1,4 +1,4 @@
-import { postRequest } from "@/utils/api";
+import { postRequestMiniGame } from "@/utils/api";
 
 export async function getQuizQuestions(topic: string, level: string) {
   const prompt = `
@@ -12,7 +12,7 @@ export async function getQuizQuestions(topic: string, level: string) {
   `;
   
   try {
-    const response = await postRequest(prompt);
+    const response = await postRequestMiniGame(prompt);
     if (response.output && Array.isArray(response.output)) {
       return response.output;
     } else if (response.rawOutput) {

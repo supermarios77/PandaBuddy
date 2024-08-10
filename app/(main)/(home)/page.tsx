@@ -6,7 +6,13 @@ import UFOPanda from "./Animations/PandaInUFO.json";
 
 import Mascot from "./Components/Mascot";
 import Cards from "@/components/Card";
-import { ActivityIcon, BookIcon, Pencil, ShoppingCart } from "lucide-react";
+import {
+  ActivityIcon,
+  BookIcon,
+  Palette,
+  Pencil,
+  ShoppingCart,
+} from "lucide-react";
 
 const HomePage = () => {
   const [time, setTime] = useState("");
@@ -29,7 +35,6 @@ const HomePage = () => {
 
   return (
     <section className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white ">
-
       <div className="flex items-center justify-between w-full max-w-4xl p-6 bg-[#9570FF] rounded-[30px]">
         <div>
           <h1 className="text-2xl font-bold text-white">
@@ -46,12 +51,32 @@ const HomePage = () => {
         <Mascot status={status} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-4xl mb-[50px]">
-        <Cards link="/shop" icon={<ShoppingCart />} title="Shop" description="Buy Hearts"/>
-        <Cards link="/notes" icon={<BookIcon />} title="Notes" description="Manage your notes"/>
-        <Cards link="/courses" icon={<Pencil />} title="Study" description="Make Pandy happy by studying!"/>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5 w-full max-w-4xl mb-[50px]">
+        <Cards
+          link="/shop"
+          icon={<ShoppingCart />}
+          title="Shop"
+          description="Buy some stickers."
+        />
+        <Cards
+          link="/notes"
+          icon={<BookIcon />}
+          title="Notes"
+          description="Manage your notes."
+        />
+        <Cards
+          link="/courses"
+          icon={<Pencil />}
+          title="Study"
+          description="Earn points now!"
+        />
+        <Cards
+          link="/workbench"
+          icon={<Palette />}
+          title="Workbench"
+          description="Create cool art!"
+        />
       </div>
-
     </section>
   );
 };
