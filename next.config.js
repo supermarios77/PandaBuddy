@@ -5,6 +5,8 @@ module.exports = {
       "images.unsplash.com",
       "lh3.googleusercontent.com",
       "img.clerk.com",
+      "img.freepik.com",
+      "dotbadges.com"
     ],
   },
   webpack: (config) => {
