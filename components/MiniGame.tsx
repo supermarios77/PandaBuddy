@@ -18,9 +18,11 @@ import {
 } from "@radix-ui/react-icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { db } from "@/lib/firebaseConfig";
-import { collection, addDoc, doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useUser } from "@clerk/nextjs";
 import { TrophyIcon } from "lucide-react";
+import congrats from "@/public/Congrats.json";
+import Lottie from "lottie-react";
 
 interface Question {
   question: string;
@@ -133,7 +135,7 @@ export default function QuizGame({ questions }: QuizGameProps) {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              <TrophyIcon className="w-20 h-20 mx-auto text-yellow-400" />
+              <Lottie animationData={congrats} loop={false} className="m-0"/>
             </motion.div>
             <CardTitle className="text-3xl sm:text-4xl font-bold mt-4">
               Quiz Complete!
