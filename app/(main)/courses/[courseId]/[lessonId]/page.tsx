@@ -10,6 +10,7 @@ import FillInTheBlankExercise from "@/components/FillInTheBlankExercise";
 import { useRouter } from "next/navigation";
 import { createCourse, fetchLessonData, createLesson } from "@/lib/firestoreFunctions";
 import { useUser } from "@clerk/nextjs";
+import { DotLoader } from "react-spinners";
 
 const LecturePage = ({ params }: { params: { courseId: string; lessonId: string } }) => {
   const router = useRouter();
@@ -84,7 +85,12 @@ const LecturePage = ({ params }: { params: { courseId: string; lessonId: string 
     fetchData();
   }, [lessonId, params.courseId, selectedTopic, level]);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading)
+    return (
+      <div className="flex justify-center align-middle mt-[200px]">
+        <DotLoader />
+      </div>
+    );
   if (error) return <p>Error: {error}</p>;
 
   return (

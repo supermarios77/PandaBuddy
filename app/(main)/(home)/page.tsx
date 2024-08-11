@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Lottie from "lottie-react";
+import { DotLoader } from "react-spinners";
 
 import UFOPanda from "./Animations/PandaInUFO.json";
 
@@ -18,6 +19,34 @@ const HomePage = () => {
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
   const [status, setStatus] = useState<"pass" | "fail">("pass");
+  const [advice, setAdvice] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAdvice = async () => {
+      try {
+        const response = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            body: `Generate a 5 word learning advice for this time ${time} of the day`,
+          }),
+        });
+        const data = await response.json();
+        const cleanedAdvice = data.output
+          .split("\n")
+          .map((advice: string) => advice.replace(/[*-]/g, "").trim())
+          .filter((advice: string | any[]) => advice.length > 0)
+          .sort();
+        setAdvice(cleanedAdvice);
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching advice", error);
+      }
+    };
+
+    fetchAdvice();
+  }, [date]);
 
   useEffect(() => {
     const now = new Date();
@@ -33,12 +62,19 @@ const HomePage = () => {
     );
   }, []);
 
+  if (loading)
+    return (
+      <div className="flex justify-center align-middle mt-[200px]">
+        <DotLoader />
+      </div>
+    );
+
   return (
     <section className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white ">
       <div className="flex items-center justify-between w-full max-w-4xl p-6 bg-[#9570FF] rounded-[30px]">
         <div>
           <h1 className="text-2xl font-bold text-white">
-            Pick Your Subject For Today
+            {advice || `Pick Your Subject For Today`}
           </h1>
           <p className="mt-2 text-white">
             {time} {date}
