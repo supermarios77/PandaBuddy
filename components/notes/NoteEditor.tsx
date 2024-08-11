@@ -34,9 +34,9 @@ export const NoteEditor = ({ noteId }) => {
   if (loading) return <div>Loading note...</div>;
 
   return (
-    <div>
+        <div className="flex-grow bg-white shadow-lg m-4 p-6 rounded-lg overflow-y-auto">
       <Input 
-        value={title}  
+        value={title} 
         onChange={updateNoteTitle}
         className="text-2xl font-bold mb-4"
         placeholder="Enter note title"

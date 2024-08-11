@@ -4,9 +4,9 @@ import { Sidebar } from "@/components/notes/Sidebar";
 const NotePage = ({ params: { noteId } }) => {
   return (
     <div className="flex h-screen">
-      <Sidebar noteId={noteId} /> 
+      <NoteEditor noteId={noteId} />
       <div className="flex-1 p-10">
-        <NoteEditor noteId={noteId} />
+        <Sidebar noteId={noteId} />
       </div>
     </div>
   );
