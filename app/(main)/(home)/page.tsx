@@ -39,7 +39,7 @@ const HomePage = () => {
           .filter((advice: string | any[]) => advice.length > 0)
           .sort();
         setAdvice(cleanedAdvice);
-        setLoading(false)
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching advice", error);
       }
