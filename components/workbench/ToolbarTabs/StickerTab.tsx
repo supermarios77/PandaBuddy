@@ -1,9 +1,10 @@
-"use client"
+"use client";
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { db } from '@/lib/firebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
+import { useUser } from '@clerk/nextjs';
 
 interface Sticker {
   id: string;
@@ -17,20 +18,31 @@ interface StickerTabProps {
 
 const StickerTab: React.FC<StickerTabProps> = ({ onAddSticker }) => {
   const [stickers, setStickers] = useState<Sticker[]>([]);
+  const { user } = useUser();
 
   useEffect(() => {
     const fetchStickers = async () => {
-      const stickersCollection = collection(db, 'stickers');
-      const stickersSnapshot = await getDocs(stickersCollection);
-      const stickersList = stickersSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Sticker));
-      setStickers(stickersList);
+      if (!user) return;
+
+      const userStickerDocRef = doc(db, "userStickers", user.id);
+      const userStickerDoc = await getDoc(userStickerDocRef);
+
+      if (userStickerDoc.exists()) {
+        const stickerIds = userStickerDoc.data().stickers || [];
+
+        const stickerPromises = stickerIds.map(async (stickerId: string) => {
+          const stickerDocRef = doc(db, "stickers", stickerId);
+          const stickerDoc = await getDoc(stickerDocRef);
+          return stickerDoc.exists() ? { id: stickerDoc.id, ...stickerDoc.data() } as Sticker : null;
+        });
+
+        const stickerData = await Promise.all(stickerPromises);
+        setStickers(stickerData.filter(sticker => sticker !== null) as Sticker[]);
+      }
     };
 
     fetchStickers();
-  }, []);
+  }, [user]);
 
   return (
     <ScrollArea className="h-[300px] w-full pr-4">
@@ -53,4 +65,5 @@ const StickerTab: React.FC<StickerTabProps> = ({ onAddSticker }) => {
     </ScrollArea>
   );
 };
-export default StickerTab
+
+export default StickerTab;
