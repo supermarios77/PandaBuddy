@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { HomeIcon, TimerIcon, SettingsIcon, PenBoxIcon } from "lucide-react";
+import { HomeIcon, TimerIcon, SettingsIcon, PenBoxIcon, ShoppingBasket, Pencil, Palette } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -25,11 +25,27 @@ export default function Footer() {
               <span className="sr-only">Focus Time</span>
             </Link>
             <Link
-              href="/courses"
+              href="/notes"
               className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
               prefetch={false}
             >
               <PenBoxIcon className="h-6 w-6" />
+              <span className="sr-only">Notes</span>
+            </Link>
+            <Link
+              href="/shop"
+              className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              prefetch={false}
+            >
+              <ShoppingBasket className="h-6 w-6" />
+              <span className="sr-only">Study</span>
+            </Link>
+            <Link
+              href="/workbench"
+              className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              prefetch={false}
+            >
+              <Palette className="h-6 w-6" />
               <span className="sr-only">Study</span>
             </Link>
           </nav>
