@@ -18,7 +18,6 @@ import {
 const HomePage = () => {
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
-  const [status, setStatus] = useState<"pass" | "fail">("pass");
   const [advice, setAdvice] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -83,8 +82,8 @@ const HomePage = () => {
         <Lottie animationData={UFOPanda} loop={true} />
       </div>
 
-      <div className="mb-[150px]">
-        <Mascot status={status} />
+      <div className="mb-[50px] mt-[50px]">
+        <Mascot />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5 w-full max-w-4xl mb-[50px]">
