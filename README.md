@@ -1,34 +1,13 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+**Panda Buddy** is an app designed to be your personal AI-powered study companion. Imagine having a friendly, knowledgeable panda by your side to help you learn new things, practice what you've learned, and stay on track with your studies. Here's how it works, in simple terms:
 
-## Getting Started
+1. **AI-Powered Learning:** Panda Buddy uses advanced AI (like the one from Google) to create study materials just for you. Whether you're learning math, science, history, or any other subject, Panda Buddy can generate lessons and quizzes tailored to your age and skill level.
 
-First, run the development server:
+2. **Interactive Quizzes:** To make learning fun, Panda Buddy includes interactive quizzes. You can play mini-games where you answer questions related to the subject you're studying. You start with 5 hearts (like lives in a video game), and your goal is to answer as many questions as possible without losing all your hearts.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+3. **Study Tools:** The app also includes tools like a Pomodoro timer, which helps you manage your study time effectively, and a notes section where you can jot down important information.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. **Creative Workspace:** As you play and learn, you earn points that can be used to buy stickers for your workspace.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+5. **Always Improving:** Panda Buddy is constantly evolving, with new games and features being added. The app is designed to grow with you, providing more challenging content as you get better at your subjects.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+In short, Panda Buddy is like having a smart, fun, and supportive study buddy who helps make learning enjoyable and rewarding. Whether you're a beginner or advanced, Panda Buddy adapts to your needs, making it easier to stay motivated and on track with your studies.
