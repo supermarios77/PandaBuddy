@@ -6,7 +6,7 @@ export const useNotes = (userId: string) => {
   const [notes, setNotes] = useState([]);
 
   useEffect(() => {
-    const q = query(collection(db, "notes"), where("userId", "==", userId));
+    const q = query(collection(db, "notes", userId, "notes"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedNotes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setNotes(fetchedNotes);

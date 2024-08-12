@@ -4,9 +4,12 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DotLoader } from "react-spinners";
 
 export function NoteEditor({ noteId, userId }) {
-  const [note, loading] = useDocument(doc(db, "notes", userId, "notes", noteId));
+  const [note, loading] = useDocument(
+    doc(db, "notes", userId, "notes", noteId)
+  );
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
@@ -20,19 +23,28 @@ export function NoteEditor({ noteId, userId }) {
   const updateNoteTitle = async (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    await updateDoc(doc(db, "notes", userId, "notes", noteId), { title: newTitle });
+    await updateDoc(doc(db, "notes", userId, "notes", noteId), {
+      title: newTitle,
+    });
   };
 
   const updateNoteContent = async (e) => {
     const newContent = e.target.value;
     setContent(newContent);
-    await updateDoc(doc(db, "notes", userId, "notes", noteId), { content: newContent });
+    await updateDoc(doc(db, "notes", userId, "notes", noteId), {
+      content: newContent,
+    });
   };
 
-  if (loading) return <div className="flex items-center justify-center h-full">Loading note...</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center align-middle mt-[200px]">
+        <DotLoader />
+      </div>
+    );
 
   return (
-    <div className="flex-grow p-6 overflow-auto bg-gray-50 dark:bg-gray-900">
+    <div className="flex-grow p-6 overflow-auto bg-background">
       <div className="max-w-3xl mx-auto space-y-4">
         <Input
           value={title}

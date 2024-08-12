@@ -16,8 +16,8 @@ export default function NotePage({ params: { noteId } }) {
 
   return (
     <div className={`h-screen flex`}>
-      <div className="flex-grow flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-        <header className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 shadow-sm">
+      <div className="flex-grow flex flex-col bg-background transition-colors duration-300">
+        <header className="flex justify-between items-center p-4 bg-background shadow-sm">
           <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
             <MenuIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </Button>

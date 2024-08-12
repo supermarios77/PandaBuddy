@@ -15,27 +15,31 @@ export function Sidebar({ isOpen, noteId, userId }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSendQuery = async () => {
-    const noteContent = note?.data()?.content || "";
+    try {
+      const noteContent = note?.data()?.content || "";
 
-    const response = await fetch("/api/gemini", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query, noteContent }),
-    });
-    const data = await response.json();
-    const geminiResponse = data.output;
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query, noteContent }),
+      });
+      const data = await response.json();
+      const geminiResponse = data.output;
 
-    setChatHistory((prev) => [...prev, { query, response: geminiResponse }]);
-    setQuery("");
-    setIsLoading(false);
+      setIsLoading(true)
+      setChatHistory((prev) => [...prev, { query, response: geminiResponse }]);
+      setQuery("");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="w-80 h-full bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300">
+    <div className="w-80 h-full bg-background border-l border-gray-200 dark:border-black flex flex-col transition-all duration-300">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200 flex items-center">
           <SparklesIcon className="h-5 w-5 mr-2 text-purple-500" />
@@ -53,7 +57,6 @@ export function Sidebar({ isOpen, noteId, userId }) {
               key={index}
               variant="outline"
               onClick={() => setQuery(suggestion)}
-              className="text-sm h-auto py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             >
               {suggestion}
             </Button>
@@ -64,17 +67,17 @@ export function Sidebar({ isOpen, noteId, userId }) {
       <div className="flex-grow overflow-auto p-4 space-y-4">
         {chatHistory.map((chat, index) => (
           <div key={index} className="space-y-2">
-            <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+            <div className="bg-card border-[2px] border-accent p-3 rounded-lg">
               <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
                 You
               </p>
               <p className="text-gray-700 dark:text-gray-300">{chat.query}</p>
             </div>
-            <div className="bg-purple-50 dark:bg-gray-600 p-3 rounded-lg">
-              <p className="text-sm font-medium text-purple-600 dark:text-purple-300">
+            <div className="bg-primary p-3 rounded-lg">
+              <p className="text-sm font-medium text-purple-600">
                 Gemini
               </p>
-              <p className="text-gray-700 dark:text-gray-300">
+              <p className="text-primary-foreground">
                 {chat.response}
               </p>
             </div>
@@ -96,7 +99,7 @@ export function Sidebar({ isOpen, noteId, userId }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Ask Gemini..."
-            className="flex-grow bg-gray-100 dark:bg-gray-700 border-none text-gray-800 dark:text-gray-200"
+            className="flex-grow bg-card border-[1px]  text-gray-800 dark:text-gray-200"
             disabled={isLoading}
           />
           <Button
