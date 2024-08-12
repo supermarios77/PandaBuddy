@@ -1,30 +1,22 @@
-"use client"
 import { useState } from "react";
 import { useDocument } from "react-firebase-hooks/firestore";
 import { doc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import ReactMarkdown from "react-markdown";
-import { PaperPlaneIcon } from "@radix-ui/react-icons";
+import { SendIcon, SparklesIcon, Loader2Icon } from "lucide-react";
 
-const starterSuggestions = [
-  "Can you summarize the main points of my note?",
-  "What are some key takeaways from this note?",
-  "How can I improve the structure of my note?",
-  "Are there any important details I'm missing?",
-];
+const quickSuggestions = ["Summarize", "Key points", "Expand on", "Clarify"];
 
-export const Sidebar = ({ noteId }) => {
-  const [note, loading] = useDocument(doc(db, "notes", noteId));
+export function Sidebar({ isOpen, noteId }) {
+  const [note] = useDocument(doc(db, "notes", noteId));
   const [query, setQuery] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSendQuery = async () => {
     const noteContent = note?.data()?.content || "";
 
-    // Call Gemini API with current query and note content
     const response = await fetch("/api/gemini", {
       method: "POST",
       headers: {
@@ -35,71 +27,92 @@ export const Sidebar = ({ noteId }) => {
     const data = await response.json();
     const geminiResponse = data.output;
 
-    // Update chat history
-    setChatHistory(prev => [...prev, { query, response: geminiResponse }]);
+    setChatHistory((prev) => [...prev, { query, response: geminiResponse }]);
     setQuery("");
+    setIsLoading(false);
   };
 
-  const handleSuggestionClick = (suggestion) => {
-    setQuery(suggestion);
-  };
-
-  if (loading) return <div>Loading...</div>;
+  if (!isOpen) return null;
 
   return (
-    <div className="flex flex-col h-screen bg-white border-l border-gray-200">
-      <div className="px-6 py-8">
-        <h2 className="text-2xl font-bold mb-4">Gemini Assistant</h2>
-        <p className="text-gray-600 mb-6">Get smart suggestions and insights for your notes</p>
-        
-        <div className="mb-8">
-          <p className="font-semibold mb-2">Quick Suggestions:</p>
-          <div className="grid grid-cols-1 gap-2">
-            {starterSuggestions.map((suggestion, index) => (
-              <Button
-                key={index}
-                onClick={() => handleSuggestionClick(suggestion)}
-                variant="outline"
-                className="text-left"
-              >
-                {suggestion}
-              </Button>
-            ))}
-          </div>
-        </div>
+    <div className="w-80 h-full bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200 flex items-center">
+          <SparklesIcon className="h-5 w-5 mr-2 text-purple-500" />
+          Gemini Assistant
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Get insights for your notes
+        </p>
       </div>
-      
-      <Card className="flex-1 overflow-y-auto">
-        <CardContent className="p-6 space-y-6">
-          {chatHistory.map((chat, index) => (
-            <div key={index}>
-              <div className="font-semibold text-gray-800 mb-1">You:</div>
-              <div className="text-gray-700 rounded-lg bg-gray-100 p-3 mb-4">{chat.query}</div>
-              <div className="font-semibold text-blue-600 mb-1">Gemini:</div>
-              <div className="text-gray-700 rounded-lg bg-blue-50 p-3 markdown">
-                <ReactMarkdown>{chat.response}</ReactMarkdown>
-              </div>
-            </div>
+
+      {chatHistory.length === 0 && (
+        <div className="p-4 grid grid-cols-2 gap-2">
+          {quickSuggestions.map((suggestion, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              onClick={() => setQuery(suggestion)}
+              className="text-sm h-auto py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            >
+              {suggestion}
+            </Button>
           ))}
-        </CardContent>
-      </Card>
-      
-      <div className="p-6 border-t border-gray-200">
-        <div className="flex items-center">
+        </div>
+      )}
+
+      <div className="flex-grow overflow-auto p-4 space-y-4">
+        {chatHistory.map((chat, index) => (
+          <div key={index} className="space-y-2">
+            <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                You
+              </p>
+              <p className="text-gray-700 dark:text-gray-300">{chat.query}</p>
+            </div>
+            <div className="bg-purple-50 dark:bg-gray-600 p-3 rounded-lg">
+              <p className="text-sm font-medium text-purple-600 dark:text-purple-300">
+                Gemini
+              </p>
+              <p className="text-gray-700 dark:text-gray-300">
+                {chat.response}
+              </p>
+            </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="bg-purple-50 dark:bg-gray-600 p-3 rounded-lg flex items-center">
+            <Loader2Icon className="h-5 w-5 text-purple-500 dark:text-purple-300 animate-spin mr-2" />
+            <p className="text-sm font-medium text-purple-600 dark:text-purple-300">
+              Gemini is thinking...
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-2">
           <Input
-            placeholder="Ask Gemini..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 mr-4"
+            placeholder="Ask Gemini..."
+            className="flex-grow bg-gray-100 dark:bg-gray-700 border-none text-gray-800 dark:text-gray-200"
+            disabled={isLoading}
           />
           <Button
             onClick={handleSendQuery}
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3"
+            size="icon"
+            className="bg-purple-500 hover:bg-purple-600 text-white disabled:bg-gray-300 dark:disabled:bg-gray-600"
+            disabled={isLoading || !query.trim()}
           >
-            <PaperPlaneIcon className="h-5 w-5" />
+            {isLoading ? (
+              <Loader2Icon className="h-4 w-4 animate-spin" />
+            ) : (
+              <SendIcon className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
     </div>
   );
-};
+}

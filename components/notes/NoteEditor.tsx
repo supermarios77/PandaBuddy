@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from "react";
 import { useDocument } from "react-firebase-hooks/firestore";
 import { doc, updateDoc } from "firebase/firestore";
@@ -7,7 +5,7 @@ import { db } from "@/lib/firebaseConfig";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-export const NoteEditor = ({ noteId }) => {
+export function NoteEditor({ noteId }) {
   const [note, loading] = useDocument(doc(db, "notes", noteId));
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -16,7 +14,7 @@ export const NoteEditor = ({ noteId }) => {
     if (note) {
       setTitle(note.data()?.title || "");
       setContent(note.data()?.content || "");
-    }  
+    }
   }, [note]);
 
   const updateNoteTitle = async (e) => {
@@ -31,22 +29,25 @@ export const NoteEditor = ({ noteId }) => {
     await updateDoc(doc(db, "notes", noteId), { content: newContent });
   };
 
-  if (loading) return <div>Loading note...</div>;
+  if (loading) return <div className="flex items-center justify-center h-full">Loading note...</div>;
 
   return (
-        <div className="flex-grow bg-white shadow-lg m-4 p-6 rounded-lg overflow-y-auto">
-      <Input 
-        value={title} 
-        onChange={updateNoteTitle}
-        className="text-2xl font-bold mb-4"
-        placeholder="Enter note title"
-      />
-      <Textarea
-        value={content}
-        onChange={updateNoteContent} 
-        className="w-full h-[calc(100vh-200px)]"
-        placeholder="Write your note here..."
-      />
+    <div className="flex-grow p-6 overflow-auto bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-3xl mx-auto space-y-4">
+        <Input
+          value={title}
+          onChange={updateNoteTitle}
+          className="text-3xl font-bold bg-transparent border-none focus:ring-0 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600"
+          placeholder="Untitled Note"
+        />
+        <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
+        <Textarea
+          value={content}
+          onChange={updateNoteContent}
+          className="w-full min-h-[calc(100vh-200px)] resize-none bg-transparent border-none focus:ring-0 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-600"
+          placeholder="Start writing your thoughts here..."
+        />
+      </div>
     </div>
   );
-};
+}
