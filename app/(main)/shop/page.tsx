@@ -19,6 +19,8 @@ import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import buy from "@/public/audio/buy.mp3";
+import useSound from "use-sound";
 
 interface Sticker {
   id: string;
@@ -36,6 +38,7 @@ export default function StickerShop() {
   const [loadingPurchase, setLoadingPurchase] = useState<string | null>(null);
   const [userStickers, setUserStickers] = useState<Set<string>>(new Set());
   const { user } = useUser();
+  const [play] = useSound(buy)
 
   useEffect(() => {
     async function fetchData() {
@@ -113,6 +116,7 @@ export default function StickerShop() {
         setUserPoints(newPoints);
         setUserStickers(new Set([...userStickers, sticker.id]));
         setFeedbackMessage("Sticker purchased successfully!");
+        play()
       } catch (error) {
         setError("Error purchasing sticker");
         console.error("Error purchasing sticker:", error);
