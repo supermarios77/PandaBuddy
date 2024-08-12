@@ -2,7 +2,7 @@ import { postRequestMiniGame } from "@/utils/api";
 
 export async function getQuizQuestions(topic: string, level: string) {
   const prompt = `
-    Generate 5 multiple-choice questions on the topic of ${topic} for ${level}. For each question, include the question, four options, and the correct option ID.
+    Generate 8 multiple-choice questions on the topic of ${topic} for ${level}. For each question, include the question, four options, and the correct option ID.
     Format the response as a JSON array of objects, where each object has the following structure:
     {
       "question": "string",

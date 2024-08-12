@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,18 +12,31 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+
 import {
   HeartIcon,
   CheckCircledIcon,
   CrossCircledIcon,
 } from "@radix-ui/react-icons";
+import { TrophyIcon } from "lucide-react";
+
 import { motion, AnimatePresence } from "framer-motion";
+import Lottie from "lottie-react";
+
 import { db } from "@/lib/firebaseConfig";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+
 import { useUser } from "@clerk/nextjs";
-import { TrophyIcon } from "lucide-react";
+
+import congratsSound from "@/public/audio/congrats.mp3";
+import gameover from "@/public/audio/game-over.mp3";
+import correct from "@/public/audio/correct.mp3";
+import wrong from "@/public/audio/wrong.mp3";
+
 import congrats from "@/public/Congrats.json";
-import Lottie from "lottie-react";
+import failed from "@/public/Failed.json";
+
+import useSound from "use-sound";
 
 interface Question {
   question: string;
@@ -45,7 +59,12 @@ export default function QuizGame({ questions }: QuizGameProps) {
     null
   );
   const [isSaving, setIsSaving] = useState(false);
+
   const { user } = useUser();
+  const [play] = useSound(congratsSound);
+  const [playGameOver] = useSound(gameover);
+  const [playCorrect] = useSound(correct);
+  const [playWrong] = useSound(wrong);
 
   useEffect(() => {
     setProgress((currentQuestion / questions.length) * 100);
@@ -58,8 +77,10 @@ export default function QuizGame({ questions }: QuizGameProps) {
 
     if (isCorrect) {
       setScore(score + 10);
+      playCorrect();
     } else {
       setHearts(hearts - 1);
+      playWrong();
     }
 
     setTimeout(() => {
@@ -120,7 +141,8 @@ export default function QuizGame({ questions }: QuizGameProps) {
     );
   }
 
-  if (gameOver) {
+  if (hearts === 0) {
+    playGameOver();
     return (
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -135,7 +157,41 @@ export default function QuizGame({ questions }: QuizGameProps) {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              <Lottie animationData={congrats} loop={false} className="m-0"/>
+              <Lottie
+                animationData={failed}
+                loop={false}
+                className="m-0 mb-6"
+              />
+            </motion.div>
+            <CardTitle className="text-3xl sm:text-4xl font-bold mt-4">
+              Game Over!
+            </CardTitle>
+            <CardDescription className="text-xl text-purple-200">
+              You Failed.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  if (gameOver) {
+    play();
+    return (
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md mx-auto"
+      >
+        <Card className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg overflow-hidden">
+          <CardHeader className="text-center">
+            <motion.div
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              <Lottie animationData={congrats} loop={false} className="m-0" />
             </motion.div>
             <CardTitle className="text-3xl sm:text-4xl font-bold mt-4">
               Quiz Complete!
