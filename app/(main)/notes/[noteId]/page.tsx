@@ -1,12 +1,18 @@
 "use client";
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { NoteEditor } from "@/components/notes/NoteEditor";
 import { Sidebar } from "@/components/notes/Sidebar"
 import { Button } from "@/components/ui/button";
 import { MenuIcon } from "lucide-react";
 
 export default function NotePage({ params: { noteId } }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { userId } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  if (!userId) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className={`h-screen flex`}>
@@ -17,9 +23,9 @@ export default function NotePage({ params: { noteId } }) {
           </Button>
           <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Pandy's Notes</h1>
         </header>
-        <NoteEditor noteId={noteId} />
+        <NoteEditor noteId={noteId} userId={userId} />
       </div>
-      <Sidebar isOpen={isSidebarOpen} noteId={noteId} />
+      <Sidebar isOpen={isSidebarOpen} noteId={noteId} userId={userId} />
     </div>
   );
 }

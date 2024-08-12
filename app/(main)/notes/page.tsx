@@ -1,4 +1,3 @@
-// app/notes/page.tsx
 'use client';
 
 import { useAuth } from "@clerk/nextjs";
@@ -38,8 +37,7 @@ const NotesPage = () => {
 };
 
 const createNote = async (noteId: string, userId: string) => {
-  await setDoc(doc(db, 'notes', noteId), {
-    userId,
+  await setDoc(doc(db, 'notes', userId, 'notes', noteId), {
     title: "Untitled Note",
     content: "",
   });

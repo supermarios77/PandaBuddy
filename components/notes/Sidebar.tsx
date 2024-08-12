@@ -8,8 +8,8 @@ import { SendIcon, SparklesIcon, Loader2Icon } from "lucide-react";
 
 const quickSuggestions = ["Summarize", "Key points", "Expand on", "Clarify"];
 
-export function Sidebar({ isOpen, noteId }) {
-  const [note] = useDocument(doc(db, "notes", noteId));
+export function Sidebar({ isOpen, noteId, userId }) {
+  const [note] = useDocument(doc(db, "notes", userId, "notes", noteId));
   const [query, setQuery] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);

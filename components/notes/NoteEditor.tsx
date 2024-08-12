@@ -5,8 +5,8 @@ import { db } from "@/lib/firebaseConfig";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-export function NoteEditor({ noteId }) {
-  const [note, loading] = useDocument(doc(db, "notes", noteId));
+export function NoteEditor({ noteId, userId }) {
+  const [note, loading] = useDocument(doc(db, "notes", userId, "notes", noteId));
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
@@ -20,13 +20,13 @@ export function NoteEditor({ noteId }) {
   const updateNoteTitle = async (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    await updateDoc(doc(db, "notes", noteId), { title: newTitle });
+    await updateDoc(doc(db, "notes", userId, "notes", noteId), { title: newTitle });
   };
 
   const updateNoteContent = async (e) => {
     const newContent = e.target.value;
     setContent(newContent);
-    await updateDoc(doc(db, "notes", noteId), { content: newContent });
+    await updateDoc(doc(db, "notes", userId, "notes", noteId), { content: newContent });
   };
 
   if (loading) return <div className="flex items-center justify-center h-full">Loading note...</div>;
