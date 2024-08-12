@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+@import 'react-quill/dist/quill.snow.css';
 
 @tailwind base;
 @tailwind components;
@@ -113,4 +114,48 @@
     animation-timing-function: ease-in;
     width: 100%;
   }
+}
+
+.ql-container {
+  font-size: 16px !important;
+  font-family: inherit !important;
+}
+
+.ql-editor {
+  padding: 12px 0 !important;
+}
+
+.ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.ql-container.ql-snow {
+  border: none !important;
+}
+
+.dark .ql-toolbar.ql-snow {
+  border-bottom: 1px solid #4a5568 !important;
+}
+
+.dark .ql-toolbar.ql-snow .ql-picker-label,
+.dark .ql-toolbar.ql-snow .ql-picker-options {
+  background-color: #1a202c;
+  color: #e2e8f0;
+}
+
+.dark .ql-snow .ql-stroke {
+  stroke: #e2e8f0;
+}
+
+.dark .ql-snow .ql-fill {
+  fill: #e2e8f0;
+}
+
+.dark .ql-snow .ql-picker {
+  color: #e2e8f0;
+}
+
+.dark .ql-editor.ql-blank::before {
+  color: #718096;
 }
