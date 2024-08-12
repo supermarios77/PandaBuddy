@@ -71,4 +71,12 @@ const validateAnswer = async (userAnswer: string, correctAnswer: string) => {
   return response.output.trim().toLowerCase() === "true";
 };
 
-export { fetchLectureContent, fetchYouTubeVideo, fetchTitle, fetchKeyPoints, fetchMultipleChoiceExerciseData, fetchFillInTheBlankExerciseData, validateAnswer };
+export {
+  fetchLectureContent,
+  fetchYouTubeVideo,
+  fetchTitle,
+  fetchKeyPoints,
+  fetchMultipleChoiceExerciseData,
+  fetchFillInTheBlankExerciseData,
+  validateAnswer,
+};

@@ -5,7 +5,7 @@ export async function postRequest(prompt: string) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ body: prompt }),
     });
 
     if (!response.ok) {
