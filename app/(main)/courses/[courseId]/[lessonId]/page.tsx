@@ -1,6 +1,7 @@
-"use client";
-import React, { useState, useEffect } from "react";
-import LectureContent from "@/components/LectureContent";
+'use client'
+
+import React, { useState, useEffect } from "react"
+import LectureContent from "@/components/LectureContent"
 import {
   fetchLectureContent,
   fetchYouTubeVideo,
@@ -8,89 +9,74 @@ import {
   fetchKeyPoints,
   fetchMultipleChoiceExerciseData,
   fetchFillInTheBlankExerciseData,
-} from "@/lib/api";
-import YouTubeVideo from "@/components/YoutubeVideo";
-import UFOPanda from "@/app/(main)/(home)/Animations/PandaInUFO.json";
-import Lottie from "lottie-react";
-import MultipleChoiceExercise from "@/components/MultipleChoiceExercise";
-import FillInTheBlankExercise from "@/components/FillInTheBlankExercise";
-import { useRouter } from "next/navigation";
-import { fetchLessonData, createLesson } from "@/lib/firestoreFunctions";
-import { useUser } from "@clerk/nextjs";
-import { DotLoader } from "react-spinners";
-import { postRequest } from "@/utils/api";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+} from "@/lib/api"
+import YouTubeVideo from "@/components/YoutubeVideo"
+import UFOPanda from "@/app/(main)/(home)/Animations/PandaInUFO.json"
+import Lottie from "lottie-react"
+import MultipleChoiceExercise from "@/components/MultipleChoiceExercise"
+import FillInTheBlankExercise from "@/components/FillInTheBlankExercise"
+import { useRouter } from "next/navigation"
+import { fetchLessonData, createLesson, updateLessonCompletion } from "@/lib/firestoreFunctions"
+import { useUser } from "@clerk/nextjs"
+import { DotLoader } from "react-spinners"
+import { postRequest } from "@/utils/api"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import Link from "next/link"
+import { motion } from "framer-motion"
 
-const LecturePage = ({
-  params,
-}: {
-  params: { courseId: string; lessonId: string };
-}) => {
-  const router = useRouter();
-  const { lessonId, courseId } = params;
-  const [lectureContent, setLectureContent] = useState<string>("");
-  const [videoId, setVideoId] = useState<string | null>(null);
-  const [title, setTitle] = useState<string>("");
-  const [keyPoints, setKeypoints] = useState<string>("");
-  const [multipleChoiceExercises, setMultipleChoiceExercises] = useState<any[]>(
-    []
-  );
-  const [fillInTheBlankExercises, setFillInTheBlankExercises] = useState<any[]>(
-    []
-  );
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [category, level, selectedSubject, selectedTopic] = lessonId
-    .split("_")
-    .map(decodeURIComponent);
+export default function Component({ params }: { params: { courseId: string; lessonId: string } }) {
+  const router = useRouter()
+  const { lessonId, courseId } = params
+  const [lectureContent, setLectureContent] = useState<string>("")
+  const [videoId, setVideoId] = useState<string | null>(null)
+  const [title, setTitle] = useState<string>("")
+  const [keyPoints, setKeypoints] = useState<string>("")
+  const [multipleChoiceExercises, setMultipleChoiceExercises] = useState<any[]>([])
+  const [fillInTheBlankExercises, setFillInTheBlankExercises] = useState<any[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isCompleted, setIsCompleted] = useState<boolean>(false)
+  const [category, level, selectedTopic] = lessonId.split("_").map(decodeURIComponent)
 
-  const { user } = useUser();
-  const userId = user?.id;
+  const { user } = useUser()
+  const userId = user?.id
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log("Fetching data for lessonId:", lessonId);
       try {
-        const existingLesson = await fetchLessonData(
-          params.courseId,
-          selectedTopic,
-          String(userId)
-        );
+        const existingLesson = await fetchLessonData(params.courseId, selectedTopic, String(userId))
         if (existingLesson) {
-          console.log("Existing lesson found:", existingLesson);
-          setTitle(existingLesson.title);
-          setKeypoints(existingLesson.keyPoints);
-          setLectureContent(existingLesson.lectureContent);
-          setVideoId(existingLesson.videoId);
-          setMultipleChoiceExercises(existingLesson.multipleChoiceExercises);
-          setFillInTheBlankExercises(existingLesson.fillInTheBlankExercises);
+          setTitle(existingLesson.title)
+          setKeypoints(existingLesson.keyPoints)
+          setLectureContent(existingLesson.lectureContent)
+          setVideoId(existingLesson.videoId)
+          setMultipleChoiceExercises(existingLesson.multipleChoiceExercises)
+          setFillInTheBlankExercises(existingLesson.fillInTheBlankExercises)
+          setIsCompleted(existingLesson.completed || false)
         } else {
-          console.log("No existing lesson found. Fetching new data...");
-          const titleResponse = await fetchTitle(selectedTopic);
-          setTitle(titleResponse);
+          const [
+            titleResponse,
+            keyPointsResponse,
+            lectureContentResponse,
+            videoResponse,
+            multipleChoiceResponse,
+            fillInTheBlankResponse
+          ] = await Promise.all([
+            fetchTitle(selectedTopic),
+            fetchKeyPoints(selectedTopic),
+            fetchLectureContent(selectedTopic, level),
+            fetchYouTubeVideo(selectedTopic, level),
+            fetchMultipleChoiceExerciseData(selectedTopic),
+            fetchFillInTheBlankExerciseData(selectedTopic)
+          ])
 
-          const keyPointsResponse = await fetchKeyPoints(selectedTopic);
-          setKeypoints(keyPointsResponse);
-
-          const lectureContentResponse = await fetchLectureContent(
-            selectedTopic,
-            level
-          );
-          setLectureContent(lectureContentResponse);
-
-          const videoResponse = await fetchYouTubeVideo(selectedTopic, level);
-          setVideoId(videoResponse);
-
-          const multipleChoiceResponse = await fetchMultipleChoiceExerciseData(
-            selectedTopic
-          );
-          setMultipleChoiceExercises([multipleChoiceResponse]);
-
-          const fillInTheBlankResponse = await fetchFillInTheBlankExerciseData(
-            selectedTopic
-          );
-          setFillInTheBlankExercises([fillInTheBlankResponse]);
+          setTitle(titleResponse)
+          setKeypoints(keyPointsResponse)
+          setLectureContent(lectureContentResponse)
+          setVideoId(videoResponse)
+          setMultipleChoiceExercises([multipleChoiceResponse])
+          setFillInTheBlankExercises([fillInTheBlankResponse])
 
           const newLesson = {
             title: titleResponse,
@@ -100,37 +86,49 @@ const LecturePage = ({
             keyPoints: keyPointsResponse,
             multipleChoiceExercises: [multipleChoiceResponse],
             fillInTheBlankExercises: [fillInTheBlankResponse],
-          };
+            completed: false
+          }
 
-          await createLesson(params.courseId, newLesson, String(userId));
-          console.log("New lesson created and saved:", newLesson);
+          await createLesson(params.courseId, newLesson, String(userId))
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to load data");
+        console.error("Error fetching data:", error)
+        setError("Failed to load data")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchData();
-  }, [lessonId, params.courseId, selectedTopic, level]);
+    fetchData()
+  }, [lessonId, params.courseId, selectedTopic, level, userId])
+
+  const handleCompletionToggle = async () => {
+    const newCompletionStatus = !isCompleted;
+    setIsCompleted(newCompletionStatus);
+    await updateLessonCompletion(courseId, selectedTopic, String(userId), newCompletionStatus);
+  };
 
   if (loading)
     return (
-      <div className="flex justify-center align-middle mt-[200px]">
-        <DotLoader />
+      <div className="flex justify-center items-center h-screen">
+        <DotLoader color="#9570FF" size={60} />
       </div>
-    );
+    )
+  
   if (error)
     return (
-      <p className="text-center flex justify-center align-middle">
-        Error: {error}
-      </p>
-    );
+      <div className="text-center flex justify-center items-center h-screen">
+        <p className="text-red-500 text-xl">Error: {error}</p>
+      </div>
+    )
 
   return (
-    <section className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white">
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white"
+    >
       <div className="flex items-center justify-between w-full max-w-4xl p-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-[30px] mb-5">
         <div>
           <h1 className="text-3xl font-bold text-white">
@@ -140,50 +138,64 @@ const LecturePage = ({
             {category} - {level}
           </p>
         </div>
-        <Lottie animationData={UFOPanda} loop={true} />
+        <Lottie animationData={UFOPanda} loop={true} className="w-24 h-24" />
       </div>
 
-      <div className="bg-background flex items-center justify-between w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10">
-        <div className="flex flex-col gap-4">
-          <div>
-            <h2 className="text-3xl font-bold">Key Points</h2>
-          </div>
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="bg-background flex items-center justify-between w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10"
+      >
+        <div className="flex flex-col gap-4 w-full">
+          <h2 className="text-3xl font-bold">Key Points</h2>
           <div className="grid gap-3 text-xl">
             <LectureContent content={keyPoints} />
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="bg-background flex items-center justify-between w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10">
-        <div className="flex flex-col gap-4">
-          <div>
-            <h2 className="text-3xl font-bold">What are {title}?</h2>
-          </div>
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="bg-background flex items-center justify-between w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10"
+      >
+        <div className="flex flex-col gap-4 w-full">
+          <h2 className="text-3xl font-bold">What are {title}?</h2>
           <div className="grid gap-3 text-xl">
             <LectureContent content={lectureContent} />
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="bg-background flex items-center justify-between w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10">
-        <div className="flex flex-col gap-4">
-          <div>
-            <h2 className="text-3xl font-bold">Video</h2>
-          </div>
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="bg-background flex items-center justify-between w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10"
+      >
+        <div className="flex flex-col gap-4 w-full">
+          <h2 className="text-3xl font-bold">Video</h2>
           <div className="grid gap-3">
             {videoId ? (
               <YouTubeVideo
                 videoId={videoId}
-                className="lg:w-[850px] lg:h-[600px] sm:w-[580px] md:w-[700px]"
+                className="w-full aspect-video"
               />
             ) : (
               <p>No video found</p>
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="bg-background flex flex-col items-center w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="bg-background flex flex-col items-center w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10"
+      >
         <h2 className="text-3xl font-bold mb-4">Multiple Choice Exercises</h2>
         {multipleChoiceExercises.length > 0 ? (
           multipleChoiceExercises.map((exercise, index) => (
@@ -193,16 +205,21 @@ const LecturePage = ({
               options={exercise.options}
               correctOptionId={exercise.correctOptionId}
               onAnswer={(isCorrect) => {
-                console.log(`Answer is ${isCorrect ? "correct" : "incorrect"}`);
+                console.log(`Answer is ${isCorrect ? "correct" : "incorrect"}`)
               }}
             />
           ))
         ) : (
           <p>No multiple-choice exercises found</p>
         )}
-      </div>
+      </motion.div>
 
-      <div className="bg-background flex flex-col items-center w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.6 }}
+        className="bg-background flex flex-col items-center w-full max-w-4xl p-6 border rounded-[30px] mt-5 mb-10"
+      >
         <h2 className="text-3xl font-bold mb-4">Fill in the Blank Exercises</h2>
         {fillInTheBlankExercises.length > 0 ? (
           fillInTheBlankExercises.map((exercise, index) => (
@@ -211,20 +228,39 @@ const LecturePage = ({
               question={exercise.question}
               correctAnswer={exercise.correctAnswer}
               onAnswer={(isCorrect) => {
-                console.log(`Answer is ${isCorrect ? "correct" : "incorrect"}`);
+                console.log(`Answer is ${isCorrect ? "correct" : "incorrect"}`)
               }}
             />
           ))
         ) : (
           <p>No fill in the blank exercises found</p>
         )}
-      </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.7 }}
+        className="flex items-center space-x-4 mb-8"
+      >
+        <Checkbox
+          id="lesson-completed"
+          checked={isCompleted}
+          onCheckedChange={handleCompletionToggle}
+        />
+        <label
+          htmlFor="lesson-completed"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Mark lesson as completed
+        </label>
+      </motion.div>
 
       <Link href={`/courses/${courseId}`}>
-        <Button>Complete Exercise</Button>
+        <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+          Back to Course
+        </Button>
       </Link>
-    </section>
-  );
-};
-
-export default LecturePage;
+    </motion.section>
+  )
+}

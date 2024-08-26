@@ -1,5 +1,5 @@
 import { db } from './firebaseConfig';
-import { collection, addDoc, doc, setDoc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, updateDoc } from 'firebase/firestore';
 
 const createCourse = async (courseId: string, courseData: any, userId: string) => {
   try {
@@ -63,4 +63,29 @@ const fetchLessonData = async (courseId: string, selectedTopic: string, userId: 
   }
 };
 
-export { createCourse, createLesson, fetchCourseData, fetchLessonData };
+const updateLessonCompletion = async (courseId: string, selectedTopic: string, userId: string, completed: boolean) => {
+  try {
+
+    const courseRef = doc(db, `courses/${userId}/userCourses/${courseId}`);
+    const courseSnap = await getDoc(courseRef);
+
+    if (!courseSnap.exists()) {
+      console.log("Course not found!");
+      return;
+    }
+
+    const courseData = courseSnap.data();
+
+    const updatedTopics = courseData.topics.map((topic: any) =>
+      topic.name === selectedTopic ? { ...topic, completed } : topic
+    );
+
+    await updateDoc(courseRef, { topics: updatedTopics });
+
+    console.log(`Lesson completion updated for ${selectedTopic}: ${completed}`);
+  } catch (e) {
+    console.error("Error updating lesson completion:", e);
+  }
+};
+
+export { createCourse, createLesson, fetchCourseData, fetchLessonData, updateLessonCompletion };
