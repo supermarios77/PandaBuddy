@@ -16,9 +16,7 @@ export async function POST(request: NextRequest) {
 
     await page.goto(`http://localhost:3000/courses/${courseId}/${lessonId}`, { waitUntil: 'networkidle2' });
 
-    await page.waitForSelector('#lesson-content', { timeout: 5000 });
-
-    await page.$$eval('header, footer, .buttons, .exercise, .video, .checkbox', els => els.forEach(el => el.remove()));
+    await page.$$eval('header, footer, .hide, .checkbox', els => els.forEach(el => el.remove()));
 
     await page.setViewport({ width: 1200, height: 800 });
 
