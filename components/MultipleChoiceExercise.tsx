@@ -1,5 +1,3 @@
-// components/MultipleChoiceExercise.tsx
-
 import React from 'react';
 
 interface Option {

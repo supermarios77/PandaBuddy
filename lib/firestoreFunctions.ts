@@ -63,29 +63,25 @@ const fetchLessonData = async (courseId: string, selectedTopic: string, userId: 
   }
 };
 
-const updateLessonCompletion = async (courseId: string, selectedTopic: string, userId: string, completed: boolean) => {
+const updateTopicCompletion = async (courseId: string, selectedTopic: string, userId: string, completed: boolean) => {
   try {
-
-    const courseRef = doc(db, `courses/${userId}/userCourses/${courseId}`);
+    const courseRef = doc(db, `courses/${userId}/userCourses`, courseId);
     const courseSnap = await getDoc(courseRef);
-
-    if (!courseSnap.exists()) {
-      console.log("Course not found!");
-      return;
+    
+    if (courseSnap.exists()) {
+      const courseData = courseSnap.data();
+      const updatedTopics = courseData.topics.map((topic: any) => 
+        topic === selectedTopic ? { name: topic, completed } : topic
+      );
+      await updateDoc(courseRef, { topics: updatedTopics });
+      console.log(`Topic completion updated: ${selectedTopic} - Completed: ${completed}`);
+    } else {
+      console.log("No such course document found!");
     }
-
-    const courseData = courseSnap.data();
-
-    const updatedTopics = courseData.topics.map((topic: any) =>
-      topic.name === selectedTopic ? { ...topic, completed } : topic
-    );
-
-    await updateDoc(courseRef, { topics: updatedTopics });
-
-    console.log(`Lesson completion updated for ${selectedTopic}: ${completed}`);
   } catch (e) {
-    console.error("Error updating lesson completion:", e);
+    console.error("Error updating topic completion: ", e);
   }
 };
 
-export { createCourse, createLesson, fetchCourseData, fetchLessonData, updateLessonCompletion };
+
+export { createCourse, createLesson, fetchCourseData, fetchLessonData, updateTopicCompletion };
