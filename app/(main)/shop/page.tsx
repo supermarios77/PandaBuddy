@@ -18,19 +18,37 @@ import { collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles } from "lucide-react";
-import buy from "@/public/audio/buy.mp3";
 import useSound from "use-sound";
+import { Sparkles, X } from "lucide-react";
+import buy from "@/public/audio/buy.mp3";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Sticker {
   id: string;
   name: string;
   price: number;
   imageUrl: string;
+  category?: string;
+}
+
+interface StickerPack {
+  name: string;
+  stickers: Sticker[];
+  price: number;
+  thumbnailUrl: string;
 }
 
 export default function StickerShop() {
   const [stickers, setStickers] = useState<Sticker[]>([]);
+  const [stickerPacks, setStickerPacks] = useState<StickerPack[]>([]);
   const [userPoints, setUserPoints] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +56,8 @@ export default function StickerShop() {
   const [loadingPurchase, setLoadingPurchase] = useState<string | null>(null);
   const [userStickers, setUserStickers] = useState<Set<string>>(new Set());
   const { user } = useUser();
-  const [play] = useSound(buy)
+  const [play] = useSound(buy);
+  const [selectedPack, setSelectedPack] = useState<StickerPack | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -55,6 +74,7 @@ export default function StickerShop() {
             id: doc.id,
             ...(doc.data() as Sticker),
           }));
+
           setStickers(stickersList);
 
           if (userPointsDoc.exists()) {
@@ -66,6 +86,9 @@ export default function StickerShop() {
           if (userStickerDoc.exists()) {
             setUserStickers(new Set(userStickerDoc.data().stickers || []));
           }
+
+          const packs = groupStickersIntoPacks(stickersList);
+          setStickerPacks(packs);
         } catch (error) {
           setError("Failed to fetch data");
         } finally {
@@ -85,6 +108,31 @@ export default function StickerShop() {
       return () => clearTimeout(timer);
     }
   }, [feedbackMessage]);
+
+  const groupStickersIntoPacks = (stickers: Sticker[]): StickerPack[] => {
+    const packsMap = new Map<string, Sticker[]>();
+
+    stickers.forEach((sticker) => {
+      if (sticker.category) {
+        if (!packsMap.has(sticker.category)) {
+          packsMap.set(sticker.category, []);
+        }
+        packsMap.get(sticker.category)?.push(sticker);
+      }
+    });
+
+    return Array.from(packsMap.entries()).map(([category, stickers]) => ({
+      name: category,
+      stickers,
+      price: calculatePackPrice(stickers),
+      thumbnailUrl: stickers.slice(0, 4).map((sticker) => sticker.imageUrl)[0],
+    }));
+  };
+
+  const calculatePackPrice = (stickers: Sticker[]) => {
+    const total = stickers.reduce((sum, sticker) => sum + sticker.price, 0);
+    return Math.round(total * 0.8);
+  };
 
   const handlePurchase = async (sticker: Sticker) => {
     if (userPoints !== null && userPoints >= sticker.price && user) {
@@ -116,7 +164,7 @@ export default function StickerShop() {
         setUserPoints(newPoints);
         setUserStickers(new Set([...userStickers, sticker.id]));
         setFeedbackMessage("Sticker purchased successfully!");
-        play()
+        play();
       } catch (error) {
         setError("Error purchasing sticker");
         console.error("Error purchasing sticker:", error);
@@ -126,13 +174,55 @@ export default function StickerShop() {
     }
   };
 
+  const handlePackPurchase = async (pack: StickerPack) => {
+    if (userPoints !== null && userPoints >= pack.price && user) {
+      setLoadingPurchase(pack.name);
+      try {
+        const userStickerDoc = doc(db, "userStickers", user.id);
+        const userStickerSnap = await getDoc(userStickerDoc);
+
+        const userStickerData = userStickerSnap.exists()
+          ? userStickerSnap.data().stickers || []
+          : [];
+
+        pack.stickers.forEach((sticker) => {
+          if (!userStickerData.includes(sticker.id)) {
+            userStickerData.push(sticker.id);
+          }
+        });
+
+        await setDoc(
+          userStickerDoc,
+          { stickers: userStickerData },
+          { merge: true }
+        );
+
+        const newPoints = userPoints - pack.price;
+        await setDoc(
+          doc(db, "userPoints", user.id),
+          { points: newPoints },
+          { merge: true }
+        );
+
+        setUserPoints(newPoints);
+        setUserStickers(new Set([...userStickers, ...pack.stickers.map((sticker) => sticker.id)]));
+        setFeedbackMessage("Sticker Pack purchased successfully!");
+        play();
+      } catch (error) {
+        setError("Error purchasing sticker pack");
+        console.error("Error purchasing sticker pack:", error);
+      } finally {
+        setLoadingPurchase(null);
+      }
+    }
+  };
+
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <Skeleton className="h-8 w-64 mx-auto" />
-        <Skeleton className="h-6 w-48 mx-auto" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, index) => (
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, index) => (
             <Card key={index} className="bg-card">
               <CardHeader className="p-4 space-y-2">
                 <Skeleton className="h-4 w-3/4" />
@@ -161,7 +251,7 @@ export default function StickerShop() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg shadow-lg overflow-hidden">
         <div className="px-6 py-8 sm:px-10 sm:py-12 backdrop-blur-sm bg-white/10">
           <div className="flex flex-col sm:flex-row items-center justify-between">
@@ -175,75 +265,150 @@ export default function StickerShop() {
               </p>
             </div>
             <div className="flex flex-col items-center sm:items-end">
-              <Badge
-                variant="secondary"
-                className="text-xl py-2 px-4 mb-2 bg-white/20 text-white"
-              >
-                Your Points: {userPoints !== null ? userPoints : "Loading..."}
+              <Badge variant="secondary" className="text-lg px-4 py-2">
+                Points: {userPoints}
               </Badge>
-              <p className="text-purple-100 text-xs">
-                Earn more points to unlock special stickers!
-              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <AnimatePresence>
-        {feedbackMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="text-center"
-          >
-            <Alert variant="default">
-              <AlertDescription>{feedbackMessage}</AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <AnimatePresence>
+          {stickerPacks.map((pack) => (
+            <motion.div
+              key={pack.name}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="bg-card h-full flex flex-col shadow-md hover:shadow-lg transition-shadow duration-300">
+                <CardHeader className="p-4 space-y-2">
+                  <CardTitle className="text-xl">{pack.name} Pack</CardTitle>
+                  <CardDescription>
+                    {pack.stickers.length} Stickers - {pack.price} Points
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 flex-grow">
+                  <div className="grid grid-cols-2 gap-2 aspect-square">
+                    {pack.stickers.slice(0, 4).map((sticker) => (
+                      <div key={sticker.id} className="relative aspect-square">
+                        <Image
+                          src={sticker.imageUrl}
+                          alt={sticker.name}
+                          layout="fill"
+                          objectFit="cover"
+                          className="rounded-md"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+                <CardFooter className="p-4 flex justify-between">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" onClick={() => setSelectedPack(pack)}>
+                        View Stickers
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>{pack.name} Pack</DialogTitle>
+                        <DialogDescription>
+                          {pack.stickers.length} Stickers - {pack.price} Points
+                        </DialogDescription>
+                      </DialogHeader>
+                      <ScrollArea className="h-[300px] w-full p-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          {pack.stickers.map((sticker) => (
+                            <div key={sticker.id} className="text-center">
+                              <div className="relative aspect-square mb-2">
+                                <Image
+                                  src={sticker.imageUrl}
+                                  alt={sticker.name}
+                                  layout="fill"
+                                  objectFit="cover"
+                                  className="rounded-md"
+                                />
+                              </div>
+                              <p className="text-sm font-medium mb-1">{sticker.name}</p>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full"
+                                disabled={loadingPurchase === sticker.id || userPoints < sticker.price}
+                                onClick={() => handlePurchase(sticker)}
+                              >
+                                {loadingPurchase === sticker.id ? "Buying..." : `${sticker.price} pts`}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    variant="default"
+                    disabled={loadingPurchase === pack.name || userPoints < pack.price}
+                    onClick={() => handlePackPurchase(pack)}
+                  >
+                    {loadingPurchase === pack.name ? "Purchasing..." : "Buy Pack"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </motion.div>
+          ))}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {stickers.map((sticker) => (
-          <Card
-            key={sticker.id}
-            className="bg-card overflow-hidden hover:shadow-lg transition-shadow duration-300"
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-lg">{sticker.name}</CardTitle>
-              <CardDescription>{sticker.price} Points</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4">
-              <Image
-                src={sticker.imageUrl}
-                alt={sticker.name}
-                width={150}
-                height={150}
-                className="rounded-lg mx-auto hover:scale-105 transition-transform duration-300"
-              />
-            </CardContent>
-            <CardFooter className="p-4">
-              <Button
-                onClick={() => handlePurchase(sticker)}
-                disabled={
-                  userPoints === null ||
-                  userPoints < sticker.price ||
-                  loadingPurchase === sticker.id ||
-                  userStickers.has(sticker.id)
-                }
-                className="w-full"
-              >
-                {userStickers.has(sticker.id)
-                  ? "Purchased"
-                  : loadingPurchase === sticker.id
-                  ? "Processing..."
-                  : "Buy Sticker"}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+          {stickers.map(
+            (sticker) =>
+              !sticker.category && (
+                <motion.div
+                  key={sticker.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="bg-card h-full flex flex-col shadow-md hover:shadow-lg transition-shadow duration-300">
+                    <CardHeader className="p-4 space-y-2">
+                      <CardTitle className="text-xl">{sticker.name}</CardTitle>
+                      <CardDescription>{sticker.price} Points</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-4 flex-grow flex items-center justify-center">
+                      <div className="relative aspect-square w-full">
+                        <Image
+                          src={sticker.imageUrl}
+                          alt={sticker.name}
+                          layout="fill"
+                          objectFit="cover"
+                          className="rounded-md"
+                        />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="p-4">
+                      <Button
+                        variant="default"
+                        className="w-full"
+                        disabled={loadingPurchase === sticker.id || userPoints < sticker.price}
+                        onClick={() => handlePurchase(sticker)}
+                      >
+                        {loadingPurchase === sticker.id ? "Purchasing..." : "Buy Sticker"}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              )
+          )}
+        </AnimatePresence>
       </div>
+
+      {feedbackMessage && (
+        <Alert variant="default" className=" bg-green-500 border-green-600">
+          <AlertTitle>Success</AlertTitle>
+          <AlertDescription>{feedbackMessage}</AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

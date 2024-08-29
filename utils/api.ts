@@ -26,7 +26,7 @@ export async function postRequestMiniGame(prompt: string) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({body: prompt }),
+      body: JSON.stringify({ prompt }),
     });
 
     if (!response.ok) {
