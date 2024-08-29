@@ -19,7 +19,7 @@ import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import useSound from "use-sound";
-import { Sparkles, X } from "lucide-react";
+import { Sparkles, X, Check } from "lucide-react";
 import buy from "@/public/audio/buy.mp3";
 import {
   Dialog,
@@ -30,6 +30,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Sticker {
   id: string;
@@ -135,7 +136,7 @@ export default function StickerShop() {
   };
 
   const handlePurchase = async (sticker: Sticker) => {
-    if (userPoints !== null && userPoints >= sticker.price && user) {
+    if (userPoints !== null && userPoints >= sticker.price && user && !userStickers.has(sticker.id)) {
       setLoadingPurchase(sticker.id);
       try {
         const userStickerDoc = doc(db, "userStickers", user.id);
@@ -175,7 +176,10 @@ export default function StickerShop() {
   };
 
   const handlePackPurchase = async (pack: StickerPack) => {
-    if (userPoints !== null && userPoints >= pack.price && user) {
+    const newStickers = pack.stickers.filter(sticker => !userStickers.has(sticker.id));
+    const packPrice = calculatePackPrice(newStickers);
+
+    if (userPoints !== null && userPoints >= packPrice && user && newStickers.length > 0) {
       setLoadingPurchase(pack.name);
       try {
         const userStickerDoc = doc(db, "userStickers", user.id);
@@ -185,7 +189,7 @@ export default function StickerShop() {
           ? userStickerSnap.data().stickers || []
           : [];
 
-        pack.stickers.forEach((sticker) => {
+        newStickers.forEach((sticker) => {
           if (!userStickerData.includes(sticker.id)) {
             userStickerData.push(sticker.id);
           }
@@ -197,7 +201,7 @@ export default function StickerShop() {
           { merge: true }
         );
 
-        const newPoints = userPoints - pack.price;
+        const newPoints = userPoints - packPrice;
         await setDoc(
           doc(db, "userPoints", user.id),
           { points: newPoints },
@@ -205,8 +209,8 @@ export default function StickerShop() {
         );
 
         setUserPoints(newPoints);
-        setUserStickers(new Set([...userStickers, ...pack.stickers.map((sticker) => sticker.id)]));
-        setFeedbackMessage("Sticker Pack purchased successfully!");
+        setUserStickers(new Set([...userStickers, ...newStickers.map((sticker) => sticker.id)]));
+        setFeedbackMessage(`${newStickers.length} new stickers purchased successfully!`);
         play();
       } catch (error) {
         setError("Error purchasing sticker pack");
@@ -275,90 +279,130 @@ export default function StickerShop() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <AnimatePresence>
-          {stickerPacks.map((pack) => (
-            <motion.div
-              key={pack.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Card className="bg-card h-full flex flex-col shadow-md hover:shadow-lg transition-shadow duration-300">
-                <CardHeader className="p-4 space-y-2">
-                  <CardTitle className="text-xl">{pack.name} Pack</CardTitle>
-                  <CardDescription>
-                    {pack.stickers.length} Stickers - {pack.price} Points
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-4 flex-grow">
-                  <div className="grid grid-cols-2 gap-2 aspect-square">
-                    {pack.stickers.slice(0, 4).map((sticker) => (
-                      <div key={sticker.id} className="relative aspect-square">
-                        <Image
-                          src={sticker.imageUrl}
-                          alt={sticker.name}
-                          layout="fill"
-                          objectFit="cover"
-                          className="rounded-md"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-                <CardFooter className="p-4 flex justify-between">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" onClick={() => setSelectedPack(pack)}>
-                        View Stickers
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>{pack.name} Pack</DialogTitle>
-                        <DialogDescription>
-                          {pack.stickers.length} Stickers - {pack.price} Points
-                        </DialogDescription>
-                      </DialogHeader>
-                      <ScrollArea className="h-[300px] w-full p-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          {pack.stickers.map((sticker) => (
-                            <div key={sticker.id} className="text-center">
-                              <div className="relative aspect-square mb-2">
-                                <Image
-                                  src={sticker.imageUrl}
-                                  alt={sticker.name}
-                                  layout="fill"
-                                  objectFit="cover"
-                                  className="rounded-md"
-                                />
-                              </div>
-                              <p className="text-sm font-medium mb-1">{sticker.name}</p>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                                disabled={loadingPurchase === sticker.id || userPoints < sticker.price}
-                                onClick={() => handlePurchase(sticker)}
-                              >
-                                {loadingPurchase === sticker.id ? "Buying..." : `${sticker.price} pts`}
-                              </Button>
+          {stickerPacks.map((pack) => {
+            const newStickersCount = pack.stickers.filter(sticker => !userStickers.has(sticker.id)).length;
+            const packPrice = calculatePackPrice(pack.stickers.filter(sticker => !userStickers.has(sticker.id)));
+            return (
+              <motion.div
+                key={pack.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="bg-card h-full flex flex-col shadow-md hover:shadow-lg transition-shadow duration-300">
+                  <CardHeader className="p-4 space-y-2">
+                    <CardTitle className="text-xl">{pack.name} Pack</CardTitle>
+                    <CardDescription>
+                      {newStickersCount} New Stickers - {packPrice} Points
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-4 flex-grow">
+                    <div className="grid grid-cols-2 gap-2 aspect-square">
+                      {pack.stickers.slice(0, 4).map((sticker) => (
+                        <div key={sticker.id} className="relative aspect-square">
+                          <Image
+                            src={sticker.imageUrl}
+                            alt={sticker.name}
+                            layout="fill"
+                            objectFit="cover"
+                            className="rounded-md"
+                          />
+                          {userStickers.has(sticker.id) && (
+                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-md">
+                              <Check className="text-white w-8 h-8" />
                             </div>
-                          ))}
+                          )}
                         </div>
-                      </ScrollArea>
-                    </DialogContent>
-                  </Dialog>
-                  <Button
-                    variant="default"
-                    disabled={loadingPurchase === pack.name || userPoints < pack.price}
-                    onClick={() => handlePackPurchase(pack)}
-                  >
-                    {loadingPurchase === pack.name ? "Purchasing..." : "Buy Pack"}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))}
+                      ))}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="p-4 flex justify-between">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" onClick={() => setSelectedPack(pack)}>
+                          View Stickers
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>{pack.name} Pack</DialogTitle>
+                          <DialogDescription>
+                            {newStickersCount} New Stickers - {packPrice} Points
+                          </DialogDescription>
+                        </DialogHeader>
+                        <ScrollArea className="h-[300px] w-full p-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            {pack.stickers.map((sticker) => (
+                              <div key={sticker.id} className="text-center">
+                                <div className="relative aspect-square mb-2">
+                                  <Image
+                                    src={sticker.imageUrl}
+                                    alt={sticker.name}
+                                    layout="fill"
+                                    objectFit="cover"
+                                    className="rounded-md"
+                                  />
+                                  {userStickers.has(sticker.id) && (
+                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-md">
+                                      <Check className="text-white w-8 h-8" />
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="text-sm font-medium mb-1">{sticker.name}</p>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="w-full"
+                                          disabled={loadingPurchase === sticker.id || userPoints < sticker.price || userStickers.has(sticker.id)}
+                                          onClick={() => handlePurchase(sticker)}
+                                        >
+                                          {userStickers.has(sticker.id) ? "Owned" : 
+                                            loadingPurchase === sticker.id ? "Buying..." : `${sticker.price} pts`}
+                                        </Button>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {userStickers.has(sticker.id) ? "You already own this sticker" : 
+                                        userPoints < sticker.price ? "Not enough points" : "Click to purchase"}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </DialogContent>
+                    </Dialog>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            <Button
+                              variant="default"
+                              disabled={loadingPurchase === pack.name || userPoints < packPrice || newStickersCount === 0}
+                              onClick={() => handlePackPurchase(pack)}
+                            >
+                              {loadingPurchase === pack.name ? "Purchasing..." : 
+                                newStickersCount === 0 ? "Owned" : "Buy Pack"}
+                            </Button>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {newStickersCount === 0 ? "You own all stickers in this pack" : 
+                            userPoints < packPrice ? "Not enough points" : "Click to purchase new stickers"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            );
+          })}
 
           {stickers.map(
             (sticker) =>
@@ -384,17 +428,35 @@ export default function StickerShop() {
                           objectFit="cover"
                           className="rounded-md"
                         />
+                        {userStickers.has(sticker.id) && (
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-md">
+                            <Check className="text-white w-12 h-12" />
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter className="p-4">
-                      <Button
-                        variant="default"
-                        className="w-full"
-                        disabled={loadingPurchase === sticker.id || userPoints < sticker.price}
-                        onClick={() => handlePurchase(sticker)}
-                      >
-                        {loadingPurchase === sticker.id ? "Purchasing..." : "Buy Sticker"}
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="w-full">
+                              <Button
+                                variant="default"
+                                className="w-full"
+                                disabled={loadingPurchase === sticker.id || userPoints < sticker.price || userStickers.has(sticker.id)}
+                                onClick={() => handlePurchase(sticker)}
+                              >
+                                {userStickers.has(sticker.id) ? "Owned" : 
+                                  loadingPurchase === sticker.id ? "Purchasing..." : "Buy Sticker"}
+                              </Button>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {userStickers.has(sticker.id) ? "You already own this sticker" : 
+                              userPoints < sticker.price ? "Not enough points" : "Click to purchase"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </CardFooter>
                   </Card>
                 </motion.div>
@@ -404,7 +466,7 @@ export default function StickerShop() {
       </div>
 
       {feedbackMessage && (
-        <Alert variant="default" className=" bg-green-500 border-green-600">
+        <Alert variant="default" className="bg-green-500 border-green-600">
           <AlertTitle>Success</AlertTitle>
           <AlertDescription>{feedbackMessage}</AlertDescription>
         </Alert>

@@ -336,8 +336,8 @@ export default function LecturePage({ params }) {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between w-full max-w-4xl mb-8 hide">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between w-full max-w-4xl mb-4 sm:mb-8 space-y-4 sm:space-y-0 sm:space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4 bg-gray-50 p-2 sm:p-3 rounded-lg shadow-sm">
           <Checkbox
             id="lesson-completed"
             checked={isCompleted}
@@ -345,19 +345,19 @@ export default function LecturePage({ params }) {
           />
           <label
             htmlFor="lesson-completed"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Mark lesson as completed
           </label>
         </div>
-        <div className="flex space-x-4">
-          <Link href={`/courses/${courseId}`}>
-            <Button variant="outline" className="flex items-center">
-              <ChevronLeft className="mr-2 h-4 w-4" /> Back to Course
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+          <Link href={`/courses/${courseId}`} className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-black">
+              <ChevronLeft className="mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Back to Course
             </Button>
           </Link>
-          <Button onClick={generatePDF} className="bg-green-600 hover:bg-green-700 text-white flex items-center">
-            <Download className="mr-2 h-4 w-4" /> Generate PDF
+          <Button onClick={generatePDF} className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+            <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Download PDF
           </Button>
         </div>
       </div>
