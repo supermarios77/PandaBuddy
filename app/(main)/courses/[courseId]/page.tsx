@@ -91,8 +91,8 @@ export default function Component({
   };
 
   useEffect(() => {
-    console.log("Topics updated:", topics); 
-}, [topics]);
+    console.log("Topics updated:", topics);
+  }, [topics]);
 
   if (loading) {
     return (
@@ -132,7 +132,9 @@ export default function Component({
             <div className="text-center sm:text-left mb-4 sm:mb-0">
               <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 flex items-center">
                 <BookOpen className="w-8 h-8 mr-2" />
-                {selectedSubject}
+                {selectedSubject.split("\n")
+                  .map((topic: string) => topic.replace(/[*-1234567890]/g, " ").trim())
+                  .filter((topic: string | any[]) => topic.length > 0)}
               </h1>
               <p className="text-purple-100 text-sm sm:text-base max-w-md">
                 {category} - {level}
@@ -167,9 +169,8 @@ export default function Component({
               className="h-full"
             >
               <Card
-                className={`bg-card overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full flex flex-col ${
-                  topic.completed ? "border-green-500" : ""
-                }`}
+                className={`bg-card overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer h-full flex flex-col ${topic.completed ? "border-green-500" : ""
+                  }`}
                 onClick={() => handleTopicSelect(topic.name)}
               >
                 <CardHeader className="p-4 flex-grow">

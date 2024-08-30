@@ -1,11 +1,15 @@
 'use client'
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Lottie from "lottie-react";
 import { DotLoader } from "react-spinners";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { BookOpen, Target, ChevronRight, ChevronLeft, Star, GraduationCap, Brain, Rocket } from "lucide-react";
+import Link from "next/link";
+import { setDoc, doc } from "firebase/firestore";
+import { useUser } from "@clerk/nextjs";
+import { BookOpen, Target, ChevronRight, ChevronLeft, Star, GraduationCap, Brain, Rocket, User } from "lucide-react";
 
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -14,16 +18,19 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 import PandaAnimation from "../(home)/Animations/PandaInUFO.json";
 import CelebrationAnimation from "@/public/Welldone.json";
-import Link from "next/link";
+
+import { db } from "@/lib/firebaseConfig";
 
 const steps = [
-  { id: 1, name: "Choose Interests", icon: BookOpen },
-  { id: 2, name: "Set Goals", icon: Target },
-  { id: 3, name: "Learning Preferences", icon: Brain },
-]
+  { id: 1, name: "Your Name", icon: User },
+  { id: 2, name: "Choose Interests", icon: BookOpen },
+  { id: 3, name: "Set Goals", icon: Target },
+  { id: 4, name: "Learning Preferences", icon: Brain },
+];
 
 const interestAreas = [
   { name: "Mathematics", icon: "🧮", color: "from-blue-400 to-blue-600" },
@@ -38,67 +45,102 @@ const interestAreas = [
   { name: "Social Studies", icon: "🌍", color: "from-cyan-400 to-cyan-600" },
   { name: "Economics", icon: "📊", color: "from-orange-400 to-orange-600" },
   { name: "Philosophy", icon: "🤔", color: "from-gray-400 to-gray-600" }
-]
+];
 
 const learningStyles = [
   { name: "Visual", icon: "👁️", description: "Learn best through images, diagrams, and spatial understanding" },
   { name: "Auditory", icon: "👂", description: "Prefer learning through listening and speaking" },
   { name: "Reading/Writing", icon: "✍️", description: "Excel with text-based input and output" },
   { name: "Kinesthetic", icon: "🤸", description: "Learn by doing, hands-on experiences, and physical activities" }
-]
+];
 
 export default function Onboarding() {
-  const [currentStep, setCurrentStep] = useState(1)
+  const router = useRouter();
+  const { user, isLoaded, isSignedIn } = useUser();
+  const [currentStep, setCurrentStep] = useState(1);
   const [userProfile, setUserProfile] = useState({
+    name: "",
     interests: [],
     weeklyGoal: 3,
     notifications: true,
     learningStyle: "",
     difficultyPreference: "balanced"
-  })
-  const [score, setScore] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
-  const [isComplete, setIsComplete] = useState(false)
+  });
+  const [score, setScore] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-    setLoading(false)
-  }, [])
+    setMounted(true);
+    if (isLoaded) {
+      setLoading(false);
+      if (user?.fullName) {
+        setUserProfile(prev => ({ ...prev, name: user.fullName }));
+      }
+      if (user?.unsafeMetadata.onboardingComplete) {
+        router.push('/');
+      }
+    }
+  }, [isLoaded, user, router]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1)
-      setScore(score + 10)
+      setCurrentStep(currentStep + 1);
+      setScore(score + 10);
     } else {
-      setIsComplete(true)
+      setIsComplete(true);
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
-      })
+      });
+
+      if (isSignedIn && user) {
+        try {
+          await setDoc(doc(db, "userProfiles", user.id), {
+            ...userProfile,
+            onboardingComplete: true
+          });
+          // @ts-ignore
+          await user.update({
+            unsafeMetadata: { onboardingComplete: true }
+          });
+          console.log("User profile saved successfully");
+          setTimeout(() => {
+            router.push('/');
+          }, 5000);
+        } catch (error) {
+          console.error("Error saving user profile: ", error);
+        }
+      }
     }
-  }
+  };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
   const updateUserProfile = (key, value) => {
-    setUserProfile({ ...userProfile, [key]: value })
-    setScore(score + 5)
-  }
+    setUserProfile({ ...userProfile, [key]: value });
+    setScore(score + 5);
+  };
 
-  const progressPercentage = (currentStep / steps.length) * 100
+  const progressPercentage = (currentStep / steps.length) * 100;
 
-  if (loading) {
+  if (loading || !isLoaded) {
     return (
       <div className="flex justify-center items-center h-screen">
         <DotLoader color="#9570FF" size={60} />
       </div>
-    )
+    );
+  }
+
+  if (!isSignedIn) {
+    router.push('/sign-up');
+    return null;
   }
 
   return (
@@ -110,7 +152,6 @@ export default function Onboarding() {
         transition={{ duration: 0.5 }}
         className="flex items-center flex-col justify-center p-5 mt-10 min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900 relative overflow-hidden"
       >
-
         <motion.div
           className="absolute inset-0 z-0"
           initial={{ opacity: 0 }}
@@ -173,8 +214,9 @@ export default function Onboarding() {
                       <Tooltip>
                         <TooltipTrigger>
                           <div
-                            className={`w-3 h-3 rounded-full ${step.id <= currentStep ? "bg-purple-600" : "bg-gray-300 dark:bg-gray-600"
-                              }`}
+                            className={`w-3 h-3 rounded-full ${
+                              step.id <= currentStep ? "bg-purple-600" : "bg-gray-300 dark:bg-gray-600"
+                            }`}
                           />
                         </TooltipTrigger>
                         <TooltipContent>
@@ -225,7 +267,7 @@ export default function Onboarding() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5 }}
                     >
-                      <h2 className="text-4xl font-bold text-purple-800 dark:text-purple-200">Congratulations!</h2>
+                      <h2 className="text-4xl font-bold text-purple-800 dark:text-purple-200">Congratulations, {userProfile.name}!</h2>
                       <p className="text-xl text-gray-600 dark:text-gray-300 mt-2">
                         You've Unlocked Your Learning Adventure!
                       </p>
@@ -239,31 +281,30 @@ export default function Onboarding() {
                       <p className="text-lg text-gray-600 dark:text-gray-300">
                         Your personalized learning journey is ready. Explore new horizons, challenge yourself, and grow with every lesson!
                       </p>
-                      <div className="flex justify-center space-x-4">
-                        <Link href="/courses">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 shadow-lg flex items-center"
-                          >
-                            <Rocket className="w-5 h-5 mr-2" /> Create a new course
-                          </motion.button>
-                        </Link>
-                        <Link href="/">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="bg-white dark:bg-[#151515] text-purple-600 dark:text-purple-300 font-semibold py-3 px-6 rounded-full transition-all duration-300 shadow-lg border border-purple-300 dark:border-accent flex items-center"
-                          >
-                            <GraduationCap className="w-5 h-5 mr-2" /> Explore Panda Buddy
-                          </motion.button>
-                        </Link>
-                      </div>
+                      <p className="text-md text-gray-500 dark:text-gray-400">
+                        You'll be redirected to your dashboard in a few seconds...
+                      </p>
                     </motion.div>
                   </div>
                 ) : (
                   <>
                     {currentStep === 1 && (
+                      <div className="space-y-6">
+                        <h2 className="text-2xl font-bold text-purple-800 dark:text-purple-200">Welcome! Let's Get Started</h2>
+                        <p className="text-gray-600 dark:text-gray-300">First, let's make sure we have your name right. This helps us personalize your learning experience.</p>
+                        <div className="space-y-4">
+                          <Label htmlFor="name" className="text-lg font-medium">Your Name</Label>
+                          <Input
+                            id="name"
+                            value={userProfile.name}
+                            onChange={(e) => updateUserProfile("name", e.target.value)}
+                            placeholder="Enter your name"
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {currentStep === 2 && (
                       <div className="space-y-6">
                         <h2 className="text-2xl font-bold text-purple-800 dark:text-purple-200">Choose Your Learning Interests</h2>
                         <p className="text-gray-600 dark:text-gray-300">Select the subjects that excite you the most. Your choices will help us tailor your learning experience.</p>
@@ -291,7 +332,7 @@ export default function Onboarding() {
                         </div>
                       </div>
                     )}
-                    {currentStep === 2 && (
+                    {currentStep === 3 && (
                       <div className="space-y-6">
                         <h2 className="text-2xl font-bold text-purple-800 dark:text-purple-200">Set Your Weekly Learning Goal</h2>
                         <p className="text-gray-600 dark:text-gray-300">
@@ -335,7 +376,7 @@ export default function Onboarding() {
                         </motion.div>
                       </div>
                     )}
-                    {currentStep === 3 && (
+                    {currentStep === 4 && (
                       <div className="space-y-6">
                         <h2 className="text-2xl font-bold text-purple-800 dark:text-purple-200">Customize Your Learning Experience</h2>
                         <div className="space-y-8">
@@ -442,13 +483,13 @@ export default function Onboarding() {
               </motion.button>
               <motion.button
                 onClick={handleNext}
-                disabled={currentStep === 1 && userProfile.interests.length === 0}
-                className={`px-4 py-2 rounded-lg ${currentStep === 1 && userProfile.interests.length === 0
+                disabled={(currentStep === 1 && !userProfile.name) || (currentStep === 2 && userProfile.interests.length === 0)}
+                className={`px-4 py-2 rounded-lg ${(currentStep === 1 && !userProfile.name) || (currentStep === 2 && userProfile.interests.length === 0)
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                   }`}
-                whileHover={(currentStep !== 1 || userProfile.interests.length > 0) ? { scale: 1.05 } : {}}
-                whileTap={(currentStep !== 1 || userProfile.interests.length > 0) ? { scale: 0.95 } : {}}
+                whileHover={((currentStep !== 1 || userProfile.name) && (currentStep !== 2 || userProfile.interests.length > 0)) ? { scale: 1.05 } : {}}
+                whileTap={((currentStep !== 1 || userProfile.name) && (currentStep !== 2 || userProfile.interests.length > 0)) ? { scale: 0.95 } : {}}
               >
                 {currentStep === steps.length ? "Complete" : "Next"} <ChevronRight className="ml-2 h-4 w-4 inline" />
               </motion.button>

@@ -83,5 +83,22 @@ const updateTopicCompletion = async (courseId: string, selectedTopic: string, us
   }
 };
 
+const fetchUserProfile = async (userId: string) => {
+  try {
+    const docRef = doc(db, 'userProfiles', userId);
+    const docSnap = await getDoc(docRef);
 
-export { createCourse, createLesson, fetchCourseData, fetchLessonData, updateTopicCompletion };
+    if (docSnap.exists()) {
+      console.log("User profile data fetched: ", docSnap.data());
+      return docSnap.data();
+    } else {
+      console.log("No user profile found for this user ID!");
+      return null;
+    }
+  } catch (e) {
+    console.error("Error fetching user profile: ", e);
+    return null;
+  }
+}
+
+export { createCourse, createLesson, fetchCourseData, fetchLessonData, updateTopicCompletion, fetchUserProfile };

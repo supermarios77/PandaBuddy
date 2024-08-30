@@ -52,8 +52,10 @@ export default function LecturePage({ params }) {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!userId) return;
+
       try {
-        const existingLesson = await fetchLessonData(courseId, selectedTopic, String(userId));
+        const existingLesson = await fetchLessonData(courseId, selectedTopic, userId);
         if (existingLesson) {
           setTitle(existingLesson.title);
           setKeypoints(existingLesson.keyPoints);
@@ -62,6 +64,11 @@ export default function LecturePage({ params }) {
           setMultipleChoiceExercises(existingLesson.multipleChoiceExercises);
           setFillInTheBlankExercises(existingLesson.fillInTheBlankExercises);
           setIsCompleted(existingLesson.completed || false);
+          setCompletedSections(existingLesson.completedSections || {
+            content: false,
+            video: false,
+            exercises: false,
+          });
         } else {
           const [
             titleResponse,
@@ -73,10 +80,10 @@ export default function LecturePage({ params }) {
           ] = await Promise.all([
             fetchTitle(selectedTopic),
             fetchKeyPoints(selectedTopic),
-            fetchLectureContent(selectedTopic, level),
-            fetchYouTubeVideo(selectedTopic, level),
-            fetchMultipleChoiceExerciseData(selectedTopic),
-            fetchFillInTheBlankExerciseData(selectedTopic)
+            fetchLectureContent(selectedTopic, level, "visual"),
+            fetchYouTubeVideo(selectedTopic, level, "visual"),
+            fetchMultipleChoiceExerciseData(selectedTopic, "medium"),
+            fetchFillInTheBlankExerciseData(selectedTopic, "medium")
           ]);
 
           setTitle(titleResponse);
@@ -94,10 +101,15 @@ export default function LecturePage({ params }) {
             keyPoints: keyPointsResponse,
             multipleChoiceExercises: [multipleChoiceResponse],
             fillInTheBlankExercises: [fillInTheBlankResponse],
-            completed: false
+            completed: false,
+            completedSections: {
+              content: false,
+              video: false,
+              exercises: false,
+            }
           };
 
-          await createLesson(courseId, newLesson, String(userId));
+          await createLesson(courseId, newLesson, userId);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -116,15 +128,21 @@ export default function LecturePage({ params }) {
   }, [completedSections]);
 
   const handleCompletionToggle = async () => {
+    if (!userId) return;
+
     const newCompletionStatus = !isCompleted;
     setIsCompleted(newCompletionStatus);
-    await updateTopicCompletion(courseId, selectedTopic, String(userId), newCompletionStatus);
+    await updateTopicCompletion(courseId, selectedTopic, userId, newCompletionStatus);
   };
 
   const generatePDF = async () => {
     try {
-      const response = await fetch(`/api/generate-pdf?courseId=${courseId}&lessonId=${lessonId}`, {
+      const response = await fetch(`/api/generate-pdf`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ courseId, lessonId }),
       });
       if (response.ok) {
         const blob = await response.blob();
@@ -149,49 +167,63 @@ export default function LecturePage({ params }) {
     exit: { opacity: 0, x: 20, transition: { duration: 0.3 } },
   };
 
-  const markSectionComplete = (section) => {
-    setCompletedSections((prev) => ({ ...prev, [section]: true }));
+  const markSectionComplete = async (section) => {
+    if (!userId) return;
+
+    const updatedSections = { ...completedSections, [section]: true };
+    setCompletedSections(updatedSections);
+    
+    const lessonUpdate = {
+      completedSections: updatedSections,
+    };
+    
+    try {
+      await createLesson(courseId, lessonUpdate, userId);
+    } catch (error) {
+      console.error("Error updating lesson completion:", error);
+    }
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <DotLoader color="#9570FF" size={60} />
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div className="text-center flex justify-center items-center h-screen">
         <p className="text-red-500 text-xl">Error: {error}</p>
       </div>
     );
+  }
 
   const TabButton = ({ value, icon, label }) => (
-    <div className="hide">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => setActiveTab(value)}
-              className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${activeTab === value
-                  ? "bg-primary text-primary-foreground shadow-lg"
-                  : "bg-background text-muted-foreground hover:bg-secondary"
-                }`}
-            >
-              {icon}
-              <span>{label}</span>
-              {completedSections[value] && (
-                <CheckCircle className="w-4 h-4 ml-2 text-green-500" />
-              )}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{completedSections[value] ? "Completed" : "Not completed"}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={() => setActiveTab(value)}
+            className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+              activeTab === value
+                ? "bg-primary text-primary-foreground shadow-lg"
+                : "bg-background text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            {icon}
+            <span className="hidden sm:inline">{label}</span>
+            {completedSections[value] && (
+              <CheckCircle className="w-4 h-4 ml-2 text-green-500" />
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{completedSections[value] ? "Completed" : "Not completed"}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 
   return (
@@ -244,7 +276,7 @@ export default function LecturePage({ params }) {
               className="mt-6"
             >
               {activeTab === "content" && (
-                <ScrollArea className="h-[60vh] content">
+                <ScrollArea className="h-[60vh]">
                   <div className="space-y-8">
                     <div>
                       <h2 className="text-2xl font-bold mb-4">Key Points</h2>
@@ -257,7 +289,7 @@ export default function LecturePage({ params }) {
                     <Button
                       onClick={() => markSectionComplete("content")}
                       disabled={completedSections.content}
-                      className="mt-4 hide"
+                      className="mt-4"
                     >
                       {completedSections.content ? "Completed" : "Mark as Complete"}
                     </Button>
@@ -265,7 +297,7 @@ export default function LecturePage({ params }) {
                 </ScrollArea>
               )}
               {activeTab === "video" && (
-                <div className="hide">
+                <div>
                   {videoId ? (
                     <YouTubeVideo
                       videoId={videoId}
@@ -285,7 +317,7 @@ export default function LecturePage({ params }) {
               )}
               {activeTab === "exercises" && (
                 <ScrollArea className="h-[60vh]">
-                  <div className="space-y-8 hide">
+                  <div className="space-y-8">
                     <div>
                       <h2 className="text-2xl font-bold mb-4">Multiple Choice Exercises</h2>
                       {multipleChoiceExercises.length > 0 ? (
@@ -304,7 +336,7 @@ export default function LecturePage({ params }) {
                         <p>No multiple-choice exercises found</p>
                       )}
                     </div>
-                    <div className="hide">
+                    <div>
                       <h2 className="text-2xl font-bold mb-4">Fill in the Blank Exercises</h2>
                       {fillInTheBlankExercises.length > 0 ? (
                         fillInTheBlankExercises.map((exercise, index) => (
@@ -337,28 +369,30 @@ export default function LecturePage({ params }) {
       </Card>
 
       <div className="flex flex-col sm:flex-row items-center justify-between w-full max-w-4xl mb-4 sm:mb-8 space-y-4 sm:space-y-0 sm:space-x-4">
-        <div className="flex items-center space-x-2 sm:space-x-4 bg-gray-50 p-2 sm:p-3 rounded-lg shadow-sm">
+        <div className="flex items-center space-x-2 sm:space-x-4 bg-gray-50 p-2 sm:p-4 rounded-lg shadow-md">
           <Checkbox
-            id="lesson-completed"
+            id="completed"
             checked={isCompleted}
             onCheckedChange={handleCompletionToggle}
           />
           <label
-            htmlFor="lesson-completed"
-            className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            htmlFor="completed"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
-            Mark lesson as completed
+            Mark as completed
           </label>
         </div>
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-          <Link href={`/courses/${courseId}`} className="w-full sm:w-auto">
-            <Button variant="outline" className="w-full bg-white hover:bg-gray-100 text-black">
-              <ChevronLeft className="mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Back to Course
+        <div className="flex space-x-2 sm:space-x-4">
+          <Button onClick={generatePDF} className="flex items-center space-x-2">
+            <Download className="w-4 h-4" />
+            <span>Download PDF</span>
+          </Button>
+          <Link href={`/course/${courseId}`}>
+            <Button variant="outline" className="flex items-center space-x-2">
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back to Course</span>
             </Button>
           </Link>
-          <Button onClick={generatePDF} className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
-            <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Download PDF
-          </Button>
         </div>
       </div>
     </motion.section>

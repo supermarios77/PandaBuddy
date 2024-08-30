@@ -1,14 +1,14 @@
 import { postRequest } from "@/utils/api";
 import { searchVideos } from "@/utils/youtube";
 
-const fetchLectureContent = async (selectedSubject: string, level: string) => {
-  const prompt = `Give me a comprehensive overview (paragraph) on ${selectedSubject}. Assume I know nothing about it and I am ${level}. Use analogys, Cut down on analogys for ages 15 and above`;
+const fetchLectureContent = async (selectedSubject: string, level: string, learnerType: string) => {
+  const prompt = `Give me a comprehensive overview (paragraph) on ${selectedSubject}. Assume I know nothing about it and I am ${level}, i am a ${learnerType} learner. Use analogys, Cut down on analogys for ages 15 and above`;
   const response = await postRequest(prompt);
   return response.output.trim();
 };
 
-const fetchYouTubeVideo = async (selectedTopic: string, level: string) => {
-  const queryPrompt = `Generate a search query for YouTube on the topic of ${selectedTopic} for ${level}`;
+const fetchYouTubeVideo = async (selectedTopic: string, level: string, learnerType: string) => {
+  const queryPrompt = `Generate a search query for YouTube on the topic of ${selectedTopic} for ${level}, the person is a ${learnerType}`;
   const queryResponse = await postRequest(queryPrompt);
   const searchQuery = queryResponse.output.trim();
   const videoResponse = await searchVideos(searchQuery);
@@ -32,9 +32,9 @@ const fetchKeyPoints = async (topic: string) => {
   return response.output.trim();
 };
 
-const fetchMultipleChoiceExerciseData = async (topic: string) => {
+const fetchMultipleChoiceExerciseData = async (topic: string, difficulty: string) => {
   const prompt = `
-    Generate a multiple-choice question on the topic of ${topic}. Include the question, four options, and the correct option ID.
+    Generate a multiple-choice question on the topic of ${topic}, make it ${difficulty}. Include the question, four options, and the correct option ID.
     Format the response as:
     {
       "type": "multiple-choice",
@@ -47,9 +47,9 @@ const fetchMultipleChoiceExerciseData = async (topic: string) => {
   return JSON.parse(response.output.trim());
 };
 
-const fetchFillInTheBlankExerciseData = async (topic: string) => {
+const fetchFillInTheBlankExerciseData = async (topic: string, difficulty: string) => {
   const prompt = `
-    Generate a fill-in-the-blank question on the topic of ${topic}. Include the question and the correct answer.
+    Generate a fill-in-the-blank question on the topic of ${topic}, make it ${difficulty}. Include the question and the correct answer.
     Format the response as:
     {
       "type": "fill-in-the-blank",
