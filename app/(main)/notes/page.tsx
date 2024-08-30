@@ -68,7 +68,7 @@ export default function Component() {
             placeholder="Search notes..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full py-3 pl-12 pr-4 text-gray-700 bg-card border-2 border-purple-300 rounded-full focus:outline-none focus:border-purple-500 dark:text-gray-200 dark:border-purple-700 dark:focus:border-purple-500"
+            className="w-full py-3 pl-12 pr-4 text-gray-700 bg-card border-2 border-purple-300 rounded-full focus:outline-none focus:border-purple-500 dark:text-gray-200 dark:border-accent dark:focus:border-purple-500"
           />
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
         </motion.div>

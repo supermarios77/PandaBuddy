@@ -18,7 +18,7 @@ export default function Footer() {
   const [activeItem, setActiveItem] = useState("/");
 
   return (
-    <footer className="mt-auto bg-background">
+    <footer className="mt-auto">
       <div className="mx-auto max-w-sm p-4">
         <nav className="flex items-center justify-between rounded-2xl bg-white/10 p-2 shadow-lg ring-1 ring-white/20 backdrop-blur-lg">
           {footerItems.map((item) => (
