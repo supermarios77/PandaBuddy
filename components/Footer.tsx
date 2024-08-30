@@ -1,55 +1,67 @@
-import Link from "next/link";
+"use client"
 
-import { HomeIcon, TimerIcon, SettingsIcon, PenBoxIcon, ShoppingBasket, Pencil, Palette } from "lucide-react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { HomeIcon, TimerIcon, PenBoxIcon, ShoppingBasket, Palette } from "lucide-react";
+import { motion } from "framer-motion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+const footerItems = [
+  { href: "/", icon: HomeIcon, label: "Home" },
+  { href: "/timer", icon: TimerIcon, label: "Focus Time" },
+  { href: "/notes", icon: PenBoxIcon, label: "Notes" },
+  { href: "/shop", icon: ShoppingBasket, label: "Shop" },
+  { href: "/workbench", icon: Palette, label: "Workbench" },
+];
 
 export default function Footer() {
+  const [activeItem, setActiveItem] = useState("/");
+
   return (
-    <footer>
-      <div className="bg-transparent px-4 py-3 sm:px-6">
-        <div className="mx-auto max-w-md rounded-xl bg-background shadow-2xl ring-1 ring-gray-900/5">
-          <nav className="flex items-center justify-between gap-4 p-4">
-            <Link
-              href="/"
-              className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500  focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-              prefetch={false}
-            >
-              <HomeIcon className="h-6 w-6" />
-              <span className="sr-only">Home</span>
-            </Link>
-            <Link
-              href="/timer"
-              className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              prefetch={false}
-            >
-              <TimerIcon className="h-6 w-6" />
-              <span className="sr-only">Focus Time</span>
-            </Link>
-            <Link
-              href="/notes"
-              className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-              prefetch={false}
-            >
-              <PenBoxIcon className="h-6 w-6" />
-              <span className="sr-only">Notes</span>
-            </Link>
-            <Link
-              href="/shop"
-              className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-              prefetch={false}
-            >
-              <ShoppingBasket className="h-6 w-6" />
-              <span className="sr-only">Study</span>
-            </Link>
-            <Link
-              href="/workbench"
-              className="flex items-center justify-center rounded-md p-2 text-gray-500 hover:text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-              prefetch={false}
-            >
-              <Palette className="h-6 w-6" />
-              <span className="sr-only">Study</span>
-            </Link>
-          </nav>
-        </div>
+    <footer className="mt-auto bg-background">
+      <div className="mx-auto max-w-sm p-4">
+        <nav className="flex items-center justify-between rounded-2xl bg-white/10 p-2 shadow-lg ring-1 ring-white/20 backdrop-blur-lg">
+          {footerItems.map((item) => (
+            <TooltipProvider key={item.href}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={item.href}
+                    className={`group relative flex items-center justify-center rounded-xl p-3 transition-all duration-300 ${
+                      activeItem === item.href ? 'bg-white/20' : 'hover:bg-white/10'
+                    }`}
+                    onClick={() => setActiveItem(item.href)}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="relative z-10"
+                    >
+                      <item.icon className={`h-6 w-6 transition-colors duration-300 ${
+                        activeItem === item.href ? 'text-primary' : 'text-gray-400 group-hover:text-gray-200'
+                      }`} />
+                    </motion.div>
+                    {activeItem === item.href && (
+                      <motion.span
+                        className="absolute inset-0 rounded-xl bg-primary/20"
+                        layoutId="activeBackground"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="top" 
+                  className="bg-primary text-primary-foreground"
+                >
+                  <p>{item.label}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
+        </nav>
       </div>
     </footer>
   );
