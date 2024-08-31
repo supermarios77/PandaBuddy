@@ -19,7 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-import { fetchLessonData, createLesson, updateTopicCompletion } from "@/lib/firestoreFunctions";
+import { fetchLessonData, createLesson, updateTopicCompletion, fetchUserProfile } from "@/lib/firestoreFunctions";
 import { fetchTitle, fetchKeyPoints, fetchLectureContent, fetchYouTubeVideo, fetchMultipleChoiceExerciseData, fetchFillInTheBlankExerciseData } from "@/lib/api";
 
 import { ChevronLeft, Download, BookOpen, Video, PenTool, CheckCircle } from "lucide-react";
@@ -47,8 +47,15 @@ export default function LecturePage({ params }) {
 
   const { user } = useUser();
   const userId = user?.id;
+  const userProfile = fetchUserProfile(userId);
 
   const [category, level, selectedSubject, selectedTopic] = lessonId.split("_").map(decodeURIComponent);
+
+  const subjectTopic = selectedSubject + selectedTopic
+
+  // @ts-ignore
+  const learningStyle = userProfile?.learningStyle || 'Visual';
+  const userName = user?.fullName
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,8 +87,8 @@ export default function LecturePage({ params }) {
           ] = await Promise.all([
             fetchTitle(selectedTopic),
             fetchKeyPoints(selectedTopic),
-            fetchLectureContent(selectedTopic, level, "visual"),
-            fetchYouTubeVideo(selectedTopic, level, "visual"),
+            fetchLectureContent(subjectTopic, level, learningStyle, userName),
+            fetchYouTubeVideo(selectedTopic, level, learningStyle),
             fetchMultipleChoiceExerciseData(selectedTopic, "medium"),
             fetchFillInTheBlankExerciseData(selectedTopic, "medium")
           ]);

@@ -1,8 +1,8 @@
 import { postRequest } from "@/utils/api";
 import { searchVideos } from "@/utils/youtube";
 
-const fetchLectureContent = async (selectedSubject: string, level: string, learnerType: string) => {
-  const prompt = `Give me a comprehensive overview (paragraph) on ${selectedSubject}. Assume I know nothing about it and I am ${level}, i am a ${learnerType} learner. Use analogys, Cut down on analogys for ages 15 and above`;
+const fetchLectureContent = async (selectedSubject: string, level: string, learnerType: string, userName: string) => {
+  const prompt = `Give me a comprehensive overview (paragraph) on ${selectedSubject}, my name is ${userName}, make our lesson feel direct you can use my name. Assume I know nothing about it and I am ${level}, i am a ${learnerType} learner. Use analogys, Cut down on analogys for ages 15 and above`;
   const response = await postRequest(prompt);
   return response.output.trim();
 };
