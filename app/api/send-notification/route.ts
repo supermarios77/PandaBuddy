@@ -1,3 +1,4 @@
+// /api/send-notification.js
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';

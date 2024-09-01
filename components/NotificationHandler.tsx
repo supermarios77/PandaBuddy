@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
@@ -17,6 +17,13 @@ export default function NotificationHandler() {
   async function registerServiceWorker() {
     try {
       const registration = await navigator.serviceWorker.register('/service-worker.js');
+
+      const existingSubscription = await registration.pushManager.getSubscription();
+
+      if (existingSubscription) {
+        await existingSubscription.unsubscribe();
+      }
+
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
