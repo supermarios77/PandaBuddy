@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 import "@/styles/globals.css";
+import NotificationHandler from "@/components/NotificationHandler";
 
 export const metadata: Metadata = {
   title: "Panda Buddy",
@@ -15,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <NotificationHandler />
+        </Providers>
       </body>
     </html>
   );
