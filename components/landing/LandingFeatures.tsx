@@ -40,13 +40,13 @@ export default function LandingFeatures() {
   const [activeTab, setActiveTab] = useState(1)
 
   return (
-    <section id="features" className="py-24 bg-white">
+    <section id="features" className="py-24 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">
-            Why <span className="text-purple-600">Panda Buddy</span> is Perfect for You
+          <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+            Why <span className="text-purple-600 dark:text-purple-400">Panda Buddy</span> is Perfect for You
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Discover the features that make Panda Buddy the ultimate learning companion, tailored to your unique needs and learning style.
           </p>
         </div>
@@ -82,7 +82,7 @@ export default function LandingFeatures() {
                     "text-left p-4 rounded-xl transition-all duration-200 ease-in-out",
                     activeTab === feature.id
                       ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
-                      : "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                      : "bg-gray-100 dark:bg-card hover:bg-gray-200 dark:hover:bg-gray-800/50 text-gray-800 dark:text-gray-200"
                   )}
                   onClick={() => setActiveTab(feature.id)}
                   aria-selected={activeTab === feature.id}
@@ -92,7 +92,7 @@ export default function LandingFeatures() {
                   <span className="flex items-center gap-4">
                     <span className={cn(
                       "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full",
-                      activeTab === feature.id ? "bg-white/20" : "bg-white"
+                      activeTab === feature.id ? "bg-white/20" : "bg-white dark:bg-gray-700"
                     )}>
                       {feature.icon}
                     </span>

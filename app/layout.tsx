@@ -27,6 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <meta name="google-site-verification" content="y9G-74I76-f09itJxCH963h6BS5GviyoNm_12ySLV04" />
       <body>
         <Providers>
           {children}

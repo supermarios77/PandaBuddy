@@ -1,6 +1,7 @@
 import { SignInButton, SignUpButton } from '@clerk/nextjs'
 import { PenTool } from 'lucide-react'
 import Image from 'next/image'
+import ThemeSwitch from '../ThemeSwitch'
 
 const LandingNav = () => {
     return (
@@ -23,6 +24,7 @@ const LandingNav = () => {
                             Sign Up
                         </button>
                     </SignUpButton>
+                    <ThemeSwitch />
 
                     <div className="md:hidden">
                         <button type="button" className="hs-collapse-toggle size-[38px] flex justify-center items-center text-sm font-semibold rounded-xl border border-gray-200 text-black hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700" id="hs-navbar-hcail-collapse" aria-expanded="false" aria-controls="hs-navbar-hcail" aria-label="Toggle navigation" data-hs-collapse="#hs-navbar-hcail">
