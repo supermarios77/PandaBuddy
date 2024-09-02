@@ -159,3 +159,7 @@
 .dark .ql-editor.ql-blank::before {
   color: #718096;
 }
+
+html {
+  scroll-behavior: smooth;
+}

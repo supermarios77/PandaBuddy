@@ -1,5 +1,5 @@
-import Link from 'next/link'
-import React from 'react'
+import Link from 'next/link';
+import React from 'react';
 import { BackgroundBeamsWithCollision } from '../ui/background-beams-with-collision';
 import { HoverBorderGradient } from '../ui/hover-border-gradient';
 
@@ -20,8 +20,7 @@ const LandingHero = () => {
                         Learn <span className='bg-gradient-to-r from-[#7424b9] to-[#5b66df] bg-clip-text text-transparent'>Smarter</span> With Panda Buddy
                     </h1>
                     <p className="text-gray-700 dark:text-gray-300 mx-auto max-w-2xl">
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Deserunt saepe atque enim quasi a ipsum
-                        asperiores necessitatibus deleniti, sint quo vel corporis dignissimos
+                        Elevate your study sessions with AI-driven tools designed to make learning more efficient and personalized. Discover how Panda Buddy can help you organize, study, and excel in your academics like never before.
                     </p>
                     <div className="flex justify-center items-center flex-wrap mx-auto gap-4">
                         <HoverBorderGradient>
