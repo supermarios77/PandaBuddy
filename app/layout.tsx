@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Providers } from "./providers";
 import "@/styles/globals.css";
 import NotificationHandler from "@/components/NotificationHandler";
+import PrelineScript from "@/components/PrelineScript";
 
 export const metadata: Metadata = {
   title: "Panda Buddy",
@@ -19,6 +20,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <NotificationHandler />
+          <PrelineScript />
         </Providers>
       </body>
     </html>
