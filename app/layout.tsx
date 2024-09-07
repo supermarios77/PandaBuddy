@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Panda Buddy - AI-Powered Learning Companion",
   description: "Panda Buddy is an AI-powered learning platform designed to enhance your study experience with interactive quizzes, gamification, and adaptive learning paths. Features include a Pomodoro timer, notes section, creative workspace, and more.",
   keywords: "Panda Buddy, AI learning, interactive quizzes, gamification, study companion, educational app, Pomodoro timer, notes section, creative workspace",
-  author: "Your Name or Company",
+  author: "Mariya Baig",
   openGraph: {
     title: "Panda Buddy - AI-Powered Learning Companion",
     description: "Panda Buddy is an AI-powered learning platform designed to enhance your study experience with interactive quizzes, gamification, and adaptive learning paths.",

@@ -99,6 +99,7 @@
     "react-tilt": "^1.0.2",
     "react-use": "^17.5.1",
     "react-youtube": "^10.1.0",
+    "resend": "^4.0.0",
     "simplex-noise": "^4.0.3",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",

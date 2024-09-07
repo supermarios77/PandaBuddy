@@ -16,7 +16,7 @@ export default clerkMiddleware((auth, req) => {
       return NextResponse.redirect(url);
     }
 
-    auth().protect();
+    auth().protect()
   }
 });
 
