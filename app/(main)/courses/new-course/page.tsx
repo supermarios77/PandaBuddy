@@ -3,9 +3,13 @@
 import { useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Book, FlaskRound, Globe, History, Palette, PenTool, Sun, Moon, Music, Code, Dumbbell, Microscope, Calculator, Languages } from "lucide-react"
-import { useTheme } from "next-themes"
+import { Book, FlaskRound, Globe, History, Palette, PenTool, Music, Code, Dumbbell, Microscope, Calculator, Languages } from "lucide-react"
 import confetti from 'canvas-confetti'
+import { useUser } from "@clerk/nextjs"
+import { doc, getDoc } from "firebase/firestore"
+import { db } from "@/lib/firebaseConfig"
+
+import { Badge } from "@/components/ui/badge"
 
 const categories = [
   { name: "Mathematics", icon: Calculator, gradient: "from-blue-400 to-blue-600", description: "Explore numbers, patterns, and shapes" },
@@ -24,14 +28,28 @@ const categories = [
 
 export default function WhatDoYouWantToLearn() {
   const router = useRouter()
+  const { user } = useUser()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null)
+  const [userInterests, setUserInterests] = useState<string[]>([])
 
   useEffect(() => {
     setMounted(true)
+    fetchUserInterests()
   }, [])
+
+  const fetchUserInterests = async () => {
+    if (user?.id) {
+      const docRef = doc(db, "userProfiles", user.id)
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        const userData = docSnap.data()
+        setUserInterests(userData.interests || [])
+      }
+    }
+  }
 
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(category)
@@ -91,13 +109,18 @@ export default function WhatDoYouWantToLearn() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.5, delay: index * 0.05 }}
                 whileHover={{ scale: 1.05, rotate: [0, 1, -1, 0] }}
-                className={`group flex flex-col items-center justify-center rounded-xl p-6 text-center text-white transition-all cursor-pointer bg-gradient-to-br ${category.gradient} shadow-md hover:shadow-xl`}
+                className={`group relative flex flex-col items-center justify-center rounded-xl p-6 text-center text-white transition-all cursor-pointer bg-gradient-to-br ${category.gradient} shadow-md hover:shadow-xl`}
                 onClick={() => handleCategoryClick(category.name)}
                 tabIndex={0}
                 role="button"
                 aria-label={`Select ${category.name} category`}
                 onKeyPress={(e) => e.key === 'Enter' && handleCategoryClick(category.name)}
               >
+                {userInterests.includes(category.name) && (
+                  <Badge className="absolute top-2 right-2 bg-white text-gray-900">
+                    Interested
+                  </Badge>
+                )}
                 <category.icon className="w-16 h-16 mb-4 transition-transform group-hover:scale-110 group-hover:rotate-12" />
                 <h2 className="text-2xl font-bold mb-2">{category.name}</h2>
                 <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
