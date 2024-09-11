@@ -3,13 +3,10 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { GraduationCap, School, BookOpen, Backpack, Briefcase, Lightbulb, ArrowLeft, User, Search } from "lucide-react"
+import { GraduationCap, School, BookOpen, Backpack, Briefcase, Lightbulb, ArrowLeft } from "lucide-react"
 import { useTheme } from "next-themes"
 import confetti from 'canvas-confetti'
 import { Button } from "@/components/ui/button"
-import { useUser } from "@clerk/nextjs"
-import { doc, getDoc } from "firebase/firestore"
-import { db } from "@/lib/firebaseConfig"
 
 const educationLevels = [
   { name: "Elementary", icon: School, gradient: "from-green-400 to-green-600", grades: ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5"] },
@@ -30,27 +27,10 @@ export default function PickLevel() {
   const [searchTerm, setSearchTerm] = useState("")
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null)
   const { theme } = useTheme()
-  const { user } = useUser()
-  const [userAge, setUserAge] = useState<number | null>(null)
-  const [useCurrentAge, setUseCurrentAge] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    if (user) {
-      fetchUserAge()
-    }
-  }, [user])
-
-  const fetchUserAge = async () => {
-    if (user?.id) {
-      const docRef = doc(db, "userProfiles", user.id)
-      const docSnap = await getDoc(docRef)
-      if (docSnap.exists()) {
-        const data = docSnap.data()
-        setUserAge(data.age)
-      }
-    }
-  }
+  }, [])
 
   const handleLevelClick = (level: string) => {
     setSelectedLevel(level)
@@ -75,28 +55,6 @@ export default function PickLevel() {
     }, 1000)
   }
 
-  const handleUseCurrentAge = () => {
-    setUseCurrentAge(true)
-    const level = getLevelFromAge(userAge)
-    if (level) {
-      setSelectedLevel(level.name)
-      setSelectedGrade(level.grades[0])
-      setTimeout(() => {
-        router.push(`/courses/new-course/pick-subject?category=${category}&level=${level.name}&grade=${level.grades[0]}`)
-      }, 1000)
-    }
-  }
-
-  const getLevelFromAge = (age: number | null) => {
-    if (!age) return null
-    if (age <= 10) return educationLevels[0]
-    if (age <= 13) return educationLevels[1]
-    if (age <= 18) return educationLevels[2]
-    if (age <= 22) return educationLevels[3]
-    if (age <= 30) return educationLevels[4]
-    return educationLevels[5]
-  }
-
   const filteredLevels = educationLevels.filter(level =>
     level.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -119,26 +77,13 @@ export default function PickLevel() {
           <p className="text-xl text-muted-foreground mb-8">
             Select your educational level and grade
           </p>
-
-          {!selectedLevel && (
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search levels..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full max-w-md pl-10 pr-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-          )}
-          {!selectedLevel && (
-            <Button
-              onClick={handleUseCurrentAge}
-              className="w-full sm:w-auto bg-white text-purple-600 hover:bg-gray-100 mt-5"
-            >
-              <User className="mr-2 h-4 w-4" /> Use Current Age ({userAge})
-            </Button>
-          )}
+          <input
+            type="text"
+            placeholder="Search levels..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full max-w-md px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-card text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </motion.div>
         <AnimatePresence mode="wait">
           {!selectedLevel ? (
