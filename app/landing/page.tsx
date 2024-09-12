@@ -5,7 +5,7 @@ import LandingVideo from '@/components/landing/LandingVideo'
 
 const LandingPage = () => {
   return (
-    <div>
+    <div className='landing'>
         <LandingNav />
         <LandingHero />
         <LandingVideo />

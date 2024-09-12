@@ -46,7 +46,7 @@ export default function Component() {
   return (
     <div ref={containerRef} className="max-w-7xl mx-auto px-4 py-24 overflow-hidden">
       <motion.h1 
-        className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-2 text-gray-900 dark:text-white"
+        className="text-3xl md:text-4xl lg:text-4xl font-bold text-center mb-2 text-gray-900 dark:text-white"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -54,7 +54,7 @@ export default function Component() {
         Explore Panda Buddy's
       </motion.h1>
       <motion.h1 
-        className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6 bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text"
+        className="text-3xl md:text-4xl lg:text-4.5xl font-bold text-center mb-6 bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
