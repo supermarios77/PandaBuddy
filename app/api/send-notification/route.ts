@@ -25,7 +25,7 @@ export async function POST() {
             JSON.stringify({
               title: 'Time to Study!',
               body: 'Your daily reminder to continue your learning journey.',
-              icon: '/icon.png',
+              icon: '/images/icon.png',
             })
           );
         } catch (error) {

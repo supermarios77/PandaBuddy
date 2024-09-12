@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: "Panda Buddy is an AI-powered learning platform designed to enhance your study experience with interactive quizzes, gamification, and adaptive learning paths.",
     url: "panda-buddy.vercel.app",
     // @ts-ignore
-    image: "https://panda-buddy.vercel.app/site-preview.png",
+    image: "https://panda-buddy.vercel.app/images/site-preview.png",
     siteName: "Panda Buddy",
     type: "website",
   }

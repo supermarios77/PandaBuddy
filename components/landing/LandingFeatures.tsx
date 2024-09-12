@@ -1,116 +1,107 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Gamepad, Palette, PenIcon, Phone } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from "@/lib/utils"
+import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
+import { motion, useScroll, useTransform } from 'framer-motion'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
-const pandaBuddyFeatures = [
-  {
-    id: 1,
-    title: "AI-Powered Learning",
-    description: "Harness the power of AI to tailor learning paths that adapt to your unique pace and preferences.",
-    icon: <PenIcon className="w-6 h-6" />,
-    image: "https://img.freepik.com/free-psd/3d-render-books-notebooks-sales-blank-banner-background_23-2151386597.jpg?ga=GA1.1.464907008.1722544349&semt=ais_hybrid"
-  },
-  {
-    id: 2,
-    title: "Interactive Quizzes",
-    description: "Engage with quizzes that not only test your knowledge but also help you learn as you play.",
-    icon: <Phone className="w-6 h-6" />,
-    image: "https://img.freepik.com/free-photo/books-still-life-cartoon-style_23-2150546129.jpg?ga=GA1.1.464907008.1722544349&semt=ais_hybrid"
-  },
-  {
-    id: 3,
-    title: "Gamification & Rewards",
-    description: "Earn badges and rewards as you progress, making learning a fun and engaging experience.",
-    icon: <Gamepad className="w-6 h-6" />,
-    image: "https://img.freepik.com/free-photo/3d-cartoon-background-children_23-2150150806.jpg?ga=GA1.1.464907008.1722544349&semt=ais_hybrid"
-  },
-  {
-    id: 4,
-    title: "Creative Workspace",
-    description: "Unleash your creativity with our workspace tools, including stickers, notes, and a Pomodoro timer.",
-    icon: <Palette className="w-6 h-6" />,
-    image: "https://img.freepik.com/free-psd/3d-illustration-nocturnal-person-staying-up_23-2150944847.jpg?ga=GA1.1.464907008.1722544349&semt=ais_hybrid"
-  }
-]
+export default function Component() {
+  const [hoveredCard, setHoveredCard] = useState(null)
+  const containerRef = useRef(null)
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  })
 
-export default function LandingFeatures() {
-  const [activeTab, setActiveTab] = useState(1)
+  const features = [
+    {
+      title: "Personalized AI Learning",
+      description: "Tailored lessons that adapt to your pace and understanding, making sure you learn smarter, not harder.",
+      image: "/images/personalized-learning.png",
+      span: "md:col-span-2 md:row-span-1"
+    },
+    {
+      title: "Interactive Quizzes",
+      description: "Engage with fun quizzes designed to challenge and improve your knowledge retention.",
+      image: "/images/interactive-quizzes.svg",
+    },
+    {
+      title: "Creative Workbench",
+      description: "Express yourself with stickers, drawings, and notes, making learning both interactive and enjoyable.",
+      image: "/images/creative-workbench.jpg",
+    },
+    {
+      title: "Gamified Progress",
+      description: "Track your achievements, unlock rewards, and stay motivated as you level up in your studies.",
+      image: "/images/gamified-learning.png",
+    },
+    {
+      title: "Pomodoro Timer",
+      description: "Boost your productivity with a built-in Pomodoro timer, helping you study in focused sessions.",
+      image: "/images/pomodoro-timer.png",
+    }
+  ]
 
   return (
-    <section id="features" className="py-24 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-            Why <span className="text-purple-600 dark:text-purple-400">Panda Buddy</span> is Perfect for You
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Discover the features that make Panda Buddy the ultimate learning companion, tailored to your unique needs and learning style.
-          </p>
-        </div>
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="relative aspect-square rounded-3xl overflow-hidden shadow-2xl"
+    <div ref={containerRef} className="max-w-7xl mx-auto px-4 py-24 overflow-hidden">
+      <motion.h1 
+        className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-2 text-gray-900 dark:text-white"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        Explore Panda Buddy's
+      </motion.h1>
+      <motion.h1 
+        className="text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6 bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        Power-packed Features
+      </motion.h1>
+      <motion.p 
+        className="text-lg md:text-xl text-center text-gray-600 dark:text-gray-300 mb-16 max-w-3xl mx-auto"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        And This Is Just the Beginning! Dive deeper to see how Panda Buddy can transform your learning journey.
+      </motion.p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {features.map((feature, index) => {
+          return (
+            <motion.div 
+              key={index}
+              className={`${feature.span || ''}`}
             >
-              <img
-                className="w-full h-full object-cover"
-                src={pandaBuddyFeatures[activeTab - 1].image}
-                alt={`${pandaBuddyFeatures[activeTab - 1].title} Image`}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <h3 className="text-2xl font-bold mb-2">{pandaBuddyFeatures[activeTab - 1].title}</h3>
-                <p className="text-sm">{pandaBuddyFeatures[activeTab - 1].description}</p>
-              </div>
+              <Card 
+                className="h-full bg-gray-50 dark:bg-[#111010] border-0 shadow-lg rounded-3xl overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-2xl"
+                onMouseEnter={() => setHoveredCard(index)}
+                onMouseLeave={() => setHoveredCard(null)}
+              >
+                <CardHeader className="p-6">
+                  <CardTitle className="text-2xl font-semibold text-gray-900 dark:text-white">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 pt-0">
+                  <p className="text-gray-600 dark:text-gray-300 mb-6">{feature.description}</p>
+                  <div className="relative w-full h-48 overflow-hidden rounded-2xl">
+                    <Image
+                      src={feature.image}
+                      alt={feature.title}
+                      layout="fill"
+                      objectFit="cover"
+                      className="transition-transform duration-300 ease-in-out transform hover:scale-110"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
-          </AnimatePresence>
-          <div>
-            <nav className="grid gap-4" aria-label="Features" role="tablist">
-              {pandaBuddyFeatures.map((feature) => (
-                <motion.button
-                  key={feature.id}
-                  type="button"
-                  className={cn(
-                    "text-left p-4 rounded-xl transition-all duration-200 ease-in-out",
-                    activeTab === feature.id
-                      ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
-                      : "bg-gray-100 dark:bg-card hover:bg-gray-200 dark:hover:bg-gray-800/50 text-gray-800 dark:text-gray-200"
-                  )}
-                  onClick={() => setActiveTab(feature.id)}
-                  aria-selected={activeTab === feature.id}
-                  aria-controls={`feature-tab-${feature.id}`}
-                  role="tab"
-                >
-                  <span className="flex items-center gap-4">
-                    <span className={cn(
-                      "flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full",
-                      activeTab === feature.id ? "bg-white/20" : "bg-white dark:bg-gray-700"
-                    )}>
-                      {feature.icon}
-                    </span>
-                    <span className="flex-grow">
-                      <span className="block text-lg font-semibold">
-                        {feature.title}
-                      </span>
-                      <span className="block mt-1 text-sm opacity-80">
-                        {feature.description}
-                      </span>
-                    </span>
-                  </span>
-                </motion.button>
-              ))}
-            </nav>
-          </div>
-        </div>
+          )
+        })}
       </div>
-    </section>
+    </div>
   )
 }
