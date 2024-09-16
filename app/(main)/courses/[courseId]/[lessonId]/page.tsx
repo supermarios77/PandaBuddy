@@ -3,47 +3,44 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import Lottie from "lottie-react";
 import { DotLoader } from "react-spinners";
 import { useUser } from "@clerk/nextjs";
 
-import LectureContent from "@/components/LectureContent";
-import YouTubeVideo from "@/components/YoutubeVideo";
-import MultipleChoiceExercise from "@/components/MultipleChoiceExercise";
-import FillInTheBlankExercise from "@/components/FillInTheBlankExercise";
+import LectureContent from "@/components/lesson/LectureContent";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-import { fetchLessonData, createLesson, updateTopicCompletion, fetchUserProfile } from "@/lib/firestoreFunctions";
-import { fetchTitle, fetchKeyPoints, fetchLectureContent, fetchYouTubeVideo, fetchMultipleChoiceExerciseData, fetchFillInTheBlankExerciseData } from "@/lib/api";
+import { fetchLessonData, createLesson, fetchUserProfile } from "@/lib/firestoreFunctions";
+import { fetchTitle, fetchLessonIntroduction, fetchLectureContent, fetchYouTubeVideo, fetchLessonSubline } from "@/lib/api";
 
-import { ChevronLeft, Download, BookOpen, Video, PenTool, CheckCircle } from "lucide-react";
 import UFOPanda from "@/app/(main)/(home)/Animations/PandaInUFO.json";
 
-export default function LecturePage({ params }) {
+import { Poppins } from 'next/font/google'
+import clsx from "clsx";
+import { TracingBeam } from "@/components/ui/tracing-beam";
+import { Sparkles, ChevronDown, ChevronUp, Layers } from "lucide-react";
+import YoutubeVideo from "@/components/lesson/YoutubeVideo";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Sidebar } from "@/components/lesson/Sidebar";
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-poppins',
+})
+
+function LecturePage({ params }) {
   const router = useRouter();
   const { lessonId, courseId } = params;
   const [lectureContent, setLectureContent] = useState("");
   const [videoId, setVideoId] = useState(null);
   const [title, setTitle] = useState("");
-  const [keyPoints, setKeypoints] = useState("");
-  const [multipleChoiceExercises, setMultipleChoiceExercises] = useState([]);
-  const [fillInTheBlankExercises, setFillInTheBlankExercises] = useState([]);
+  const [subtitle, setSubTitle] = useState("");
+  const [lessonIntroduction, setLessonIntroduction] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [activeTab, setActiveTab] = useState("content");
   const [progress, setProgress] = useState(0);
-  const [completedSections, setCompletedSections] = useState({
-    content: false,
-    video: false,
-    exercises: false,
-  });
 
   const { user } = useUser();
   const userId = user?.id;
@@ -65,50 +62,42 @@ export default function LecturePage({ params }) {
         const existingLesson = await fetchLessonData(courseId, selectedTopic, userId);
         if (existingLesson) {
           setTitle(existingLesson.title);
-          setKeypoints(existingLesson.keyPoints);
+          setLessonIntroduction(existingLesson.lessonIntroduction);
           setLectureContent(existingLesson.lectureContent);
           setVideoId(existingLesson.videoId);
-          setMultipleChoiceExercises(existingLesson.multipleChoiceExercises);
-          setFillInTheBlankExercises(existingLesson.fillInTheBlankExercises);
-          setIsCompleted(existingLesson.completed || false);
-          setCompletedSections(existingLesson.completedSections || {
-            content: false,
-            video: false,
-            exercises: false,
-          });
+          setSubTitle(existingLesson.subtitle);
+          setProgress(existingLesson.progress || 0);
         } else {
           const [
             titleResponse,
-            keyPointsResponse,
+            lessonIntroductionResponse,
             lectureContentResponse,
             videoResponse,
-            multipleChoiceResponse,
-            fillInTheBlankResponse
+            subtitleResponse,
           ] = await Promise.all([
             fetchTitle(selectedTopic),
-            fetchKeyPoints(selectedTopic),
+            fetchLessonIntroduction(selectedTopic, category),
             fetchLectureContent(subjectTopic, level, learningStyle, userName),
             fetchYouTubeVideo(selectedTopic, level, learningStyle),
-            fetchMultipleChoiceExerciseData(selectedTopic, "medium"),
-            fetchFillInTheBlankExerciseData(selectedTopic, "medium")
+            fetchLessonSubline(selectedTopic, lectureContent),
           ]);
 
           setTitle(titleResponse);
-          setKeypoints(keyPointsResponse);
+          setLessonIntroduction(lessonIntroductionResponse);
           setLectureContent(lectureContentResponse);
           setVideoId(videoResponse);
-          setMultipleChoiceExercises([multipleChoiceResponse]);
-          setFillInTheBlankExercises([fillInTheBlankResponse]);
+          setSubTitle(subtitleResponse);
+          setProgress(0);
 
           const newLesson = {
             title: titleResponse,
             selectedTopic,
             lectureContent: lectureContentResponse,
             videoId: videoResponse,
-            keyPoints: keyPointsResponse,
-            multipleChoiceExercises: [multipleChoiceResponse],
-            fillInTheBlankExercises: [fillInTheBlankResponse],
+            lessonIntroduction: lessonIntroductionResponse,
             completed: false,
+            subtitle: subtitleResponse,
+            progress: 0,
             completedSections: {
               content: false,
               video: false,
@@ -128,19 +117,6 @@ export default function LecturePage({ params }) {
 
     fetchData();
   }, [lessonId, courseId, selectedTopic, level, userId]);
-
-  useEffect(() => {
-    const completedCount = Object.values(completedSections).filter(Boolean).length;
-    setProgress((completedCount / 3) * 100);
-  }, [completedSections]);
-
-  const handleCompletionToggle = async () => {
-    if (!userId) return;
-
-    const newCompletionStatus = !isCompleted;
-    setIsCompleted(newCompletionStatus);
-    await updateTopicCompletion(courseId, selectedTopic, userId, newCompletionStatus);
-  };
 
   const generatePDF = async () => {
     try {
@@ -168,29 +144,6 @@ export default function LecturePage({ params }) {
     }
   };
 
-  const contentVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.5 } },
-    exit: { opacity: 0, x: 20, transition: { duration: 0.3 } },
-  };
-
-  const markSectionComplete = async (section) => {
-    if (!userId) return;
-
-    const updatedSections = { ...completedSections, [section]: true };
-    setCompletedSections(updatedSections);
-    
-    const lessonUpdate = {
-      completedSections: updatedSections,
-    };
-    
-    try {
-      await createLesson(courseId, lessonUpdate, userId);
-    } catch (error) {
-      console.error("Error updating lesson completion:", error);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -207,201 +160,50 @@ export default function LecturePage({ params }) {
     );
   }
 
-  const TabButton = ({ value, icon, label }) => (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            onClick={() => setActiveTab(value)}
-            className={`flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-              activeTab === value
-                ? "bg-primary text-primary-foreground shadow-lg"
-                : "bg-background text-muted-foreground hover:bg-secondary"
-            }`}
-          >
-            {icon}
-            <span className="hidden sm:inline">{label}</span>
-            {completedSections[value] && (
-              <CheckCircle className="w-4 h-4 ml-2 text-green-500" />
-            )}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{completedSections[value] ? "Completed" : "Not completed"}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-
   return (
-    <motion.section
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="flex items-center flex-col justify-center p-5 mt-10 text-black dark:text-white"
-    >
-      <Card className="w-full max-w-4xl mb-8">
-        <CardHeader className="bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-t-lg">
-          <div className="flex justify-between items-center">
+    <div className={clsx("flex flex-col lg:flex-row gap-8 p-6 mt-10 text-black dark:text-white", poppins.className)}>
+      <TracingBeam className="flex-grow">
+        <section className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between w-full p-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-[30px] mb-5">
             <div>
-              <CardTitle className="text-3xl font-bold">
-                {title || `What Are ${selectedTopic}`}
-              </CardTitle>
-              <p className="mt-2 text-xl">
-                {category} - {level}
+              <h3 className="text-gray-300 font-semibold mb-3">LESSON</h3>
+              <h1 className="text-3xl font-bold text-white">
+                {title.replace(/[*-1234567890]/g, " ") || `${selectedTopic.replace(/[*-1234567890]/g, " ")}`}
+              </h1>
+              <p className="mt-2 text-white text-xl">
+                {subtitle.replace(/[*-1234567890]/g, " ")}
               </p>
             </div>
-            <Lottie animationData={UFOPanda} loop={true} className="w-24 h-24" />
+            <Lottie animationData={UFOPanda} loop={true} style={{ width: '150px', height: '150px' }} />
           </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="flex justify-center space-x-4 mb-6">
-            <TabButton
-              value="content"
-              icon={<BookOpen className="w-5 h-5" />}
-              label="Content"
-            />
-            <TabButton
-              value="video"
-              icon={<Video className="w-5 h-5" />}
-              label="Video"
-            />
-            <TabButton
-              value="exercises"
-              icon={<PenTool className="w-5 h-5" />}
-              label="Exercises"
-            />
-          </div>
-          <Progress value={progress} className="mb-4" />
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              variants={contentVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="mt-6"
-            >
-              {activeTab === "content" && (
-                <ScrollArea className="h-[60vh]">
-                  <div className="space-y-8">
-                    <div>
-                      <h2 className="text-2xl font-bold mb-4">Key Points</h2>
-                      <LectureContent content={keyPoints} />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold mb-4">What are {title}?</h2>
-                      <LectureContent content={lectureContent} />
-                    </div>
-                    <Button
-                      onClick={() => markSectionComplete("content")}
-                      disabled={completedSections.content}
-                      className="mt-4"
-                    >
-                      {completedSections.content ? "Completed" : "Mark as Complete"}
-                    </Button>
-                  </div>
-                </ScrollArea>
-              )}
-              {activeTab === "video" && (
-                <div>
-                  {videoId ? (
-                    <YouTubeVideo
-                      videoId={videoId}
-                      className="w-full aspect-video rounded-lg"
-                    />
-                  ) : (
-                    <p>No video found</p>
-                  )}
-                  <Button
-                    onClick={() => markSectionComplete("video")}
-                    disabled={completedSections.video}
-                    className="mt-4"
-                  >
-                    {completedSections.video ? "Completed" : "Mark as Complete"}
-                  </Button>
-                </div>
-              )}
-              {activeTab === "exercises" && (
-                <ScrollArea className="h-[60vh]">
-                  <div className="space-y-8">
-                    <div>
-                      <h2 className="text-2xl font-bold mb-4">Multiple Choice Exercises</h2>
-                      {multipleChoiceExercises.length > 0 ? (
-                        multipleChoiceExercises.map((exercise, index) => (
-                          <MultipleChoiceExercise
-                            key={index}
-                            question={exercise.question}
-                            options={exercise.options}
-                            correctOptionId={exercise.correctOptionId}
-                            onAnswer={(isCorrect) => {
-                              console.log(`Answer is ${isCorrect ? "correct" : "incorrect"}`)
-                            }}
-                          />
-                        ))
-                      ) : (
-                        <p>No multiple-choice exercises found</p>
-                      )}
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold mb-4">Fill in the Blank Exercises</h2>
-                      {fillInTheBlankExercises.length > 0 ? (
-                        fillInTheBlankExercises.map((exercise, index) => (
-                          <FillInTheBlankExercise
-                            key={index}
-                            question={exercise.question}
-                            correctAnswer={exercise.correctAnswer}
-                            onAnswer={(isCorrect) => {
-                              console.log(`Answer is ${isCorrect ? "correct" : "incorrect"}`)
-                            }}
-                          />
-                        ))
-                      ) : (
-                        <p>No fill in the blank exercises found</p>
-                      )}
-                    </div>
-                    <Button
-                      onClick={() => markSectionComplete("exercises")}
-                      disabled={completedSections.exercises}
-                      className="mt-4"
-                    >
-                      {completedSections.exercises ? "Completed" : "Mark as Complete"}
-                    </Button>
-                  </div>
-                </ScrollArea>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </CardContent>
-      </Card>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between w-full max-w-4xl mb-4 sm:mb-8 space-y-4 sm:space-y-0 sm:space-x-4">
-        <div className="flex items-center space-x-2 sm:space-x-4 bg-gray-50 p-2 sm:p-4 rounded-lg shadow-md">
-          <Checkbox
-            id="completed"
-            checked={isCompleted}
-            onCheckedChange={handleCompletionToggle}
-          />
-          <label
-            htmlFor="completed"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Mark as completed
-          </label>
-        </div>
-        <div className="flex space-x-2 sm:space-x-4">
-          <Button onClick={generatePDF} className="flex items-center space-x-2">
-            <Download className="w-4 h-4" />
-            <span>Download PDF</span>
-          </Button>
-          <Link href={`/course/${courseId}`}>
-            <Button variant="outline" className="flex items-center space-x-2">
-              <ChevronLeft className="w-4 h-4" />
-              <span>Back to Course</span>
-            </Button>
-          </Link>
-        </div>
+          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10">
+            <div className="flex flex-col gap-4">
+              <div className="grid gap-3 text-xl tracking-wider">
+                <h2 className="text-3xl font-bold">Introduction to {title.replace(/[*-1234567890]/g, " ") || `${selectedTopic.replace(/[*-1234567890]/g, " ")}`}</h2>
+                <LectureContent content={lessonIntroduction} />
+              </div>
+              <div>
+                <YoutubeVideo videoId={videoId} className="w-full" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10">
+            <div className="flex flex-col gap-4">
+              <h2 className="text-3xl font-bold">What are {title}?</h2>
+              <div className="grid gap-3 text-xl">
+                <LectureContent content={lectureContent} />
+              </div>
+            </div>
+          </div>
+        </section>
+      </TracingBeam>
+      <div className="lg:w-1/3 lg:sticky lg:top-8 lg:self-start">
+        <Sidebar title={title} subtitle={subtitle} progress={progress} />
       </div>
-    </motion.section>
+    </div>
   );
 }
+
+export default LecturePage;

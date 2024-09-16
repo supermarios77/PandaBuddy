@@ -26,8 +26,8 @@ const fetchTitle = async (topic: string) => {
   return response.output.trim();
 };
 
-const fetchKeyPoints = async (topic: string) => {
-  const prompt = `Give 5 key points on this topic ${topic}, just give keypoints no titles`;
+const fetchLessonIntroduction = async (topic: string, subject: string) => {
+  const prompt = `Give me an introduction on this ${topic} make big words bold, and make sure it aligns with ${subject}, and dont add any headers`;
   const response = await postRequest(prompt);
   return response.output.trim();
 };
@@ -71,12 +71,19 @@ const validateAnswer = async (userAnswer: string, correctAnswer: string) => {
   return response.output.trim().toLowerCase() === "true";
 };
 
+const fetchLessonSubline = async (lessonTitle: string, lessonContent: string) => {
+  const prompt = `Generate a lesson subline using ${lessonTitle} our lesson had this content ${lessonContent}`;
+  const response = await postRequest(prompt);
+  return response.output.trim();
+}
+
 export {
   fetchLectureContent,
   fetchYouTubeVideo,
   fetchTitle,
-  fetchKeyPoints,
+  fetchLessonIntroduction,
   fetchMultipleChoiceExerciseData,
   fetchFillInTheBlankExerciseData,
   validateAnswer,
+  fetchLessonSubline
 };
