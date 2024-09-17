@@ -18,7 +18,7 @@ const subjectIcons = {
 export default function Component() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const level = searchParams.get("level") as string
+  const level = searchParams.get("grade") as string
   const category = searchParams.get("category") as string
 
   const [subjects, setSubjects] = useState<string[]>([])
@@ -34,7 +34,7 @@ export default function Component() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            body: `List top 6 subjects taught for ${category} at ${level}`,
+            body: `List top 6 subjects taught for ${category} at ${level}, dont add complex topics for my age`,
           }),
         })
         const data = await response.json()

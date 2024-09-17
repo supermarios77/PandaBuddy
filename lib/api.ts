@@ -18,6 +18,12 @@ const fetchLessonActivity = async (subject: string, lesson: string) => {
   return response.output.trim();
 }
 
+const fetchIntroductionTitle = async (subject: string) => {
+  const prompt = `Give me a nice introduction-to title on ${subject} it should say introduction to and then subject but make grammatical sense`;
+  const response = await postRequest(prompt);
+  return response.output.trim();
+}
+
 const fetchLessonSummary = async (topic: string, introduction: string, lesson: string) => {
   const prompt = `Give me a summary on my ${topic} lesson in introduction - ${introduction} in lesson - ${lesson} give it all in one peice and paragraph`;
   const response = await postRequest(prompt);
@@ -124,5 +130,6 @@ export {
   fetchLessonSubline,
   fetchLessonTitle,
   fetchLessonActivity,
-  fetchLessonSummary
+  fetchLessonSummary,
+  fetchIntroductionTitle
 };

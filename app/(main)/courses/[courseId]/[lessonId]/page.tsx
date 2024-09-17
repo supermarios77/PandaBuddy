@@ -8,7 +8,7 @@ import { useUser } from "@clerk/nextjs";
 
 import LectureContent from "@/components/lesson/LectureContent";
 import { fetchLessonData, createLesson, fetchUserProfile } from "@/lib/firestoreFunctions";
-import { fetchTitle, fetchLessonIntroduction, fetchLectureContent, fetchYouTubeVideo, fetchLessonSubline, fetchLessonTitle, fetchLessonActivity, fetchLessonSummary } from "@/lib/api";
+import { fetchTitle, fetchLessonIntroduction, fetchLectureContent, fetchYouTubeVideo, fetchLessonSubline, fetchLessonTitle, fetchLessonActivity, fetchLessonSummary, fetchIntroductionTitle } from "@/lib/api";
 
 import UFOPanda from "@/app/(main)/(home)/Animations/PandaInUFO.json";
 
@@ -40,6 +40,7 @@ export default function LecturePage({ params }: LecturePageProps) {
   const [title, setTitle] = useState("");
   const [lessonHeading, setLessonHeading] = useState("")
   const [subtitle, setSubTitle] = useState("");
+  const [introductionTitle, setIntroductionTitle] = useState("");
   const [lessonIntroduction, setLessonIntroduction] = useState("");
   const [activity, setActivity] = useState("");
   const [summary, setSummary] = useState("");
@@ -70,6 +71,7 @@ export default function LecturePage({ params }: LecturePageProps) {
           setLessonHeading(existingLesson.lessonHeading);
           setActivity(existingLesson.activity);
           setSummary(existingLesson.summary);
+          setIntroductionTitle(existingLesson.introductionTitle)
         } else {
           const titleResponse = await fetchTitle(selectedTopic);
           setTitle(titleResponse);
@@ -86,12 +88,14 @@ export default function LecturePage({ params }: LecturePageProps) {
             lessonHeadingResponse,
             activityResponse,
             summaryResponse,
+            introductionTitleResponse
           ] = await Promise.all([
             fetchYouTubeVideo(selectedTopic, level, learningStyle),
             fetchLessonSubline(selectedTopic, lectureContentResponse),
             fetchLessonTitle(lectureContentResponse, selectedTopic),
             fetchLessonActivity(selectedTopic, lectureContentResponse),
-            fetchLessonSummary(selectedTopic, lessonIntroductionResponse, lectureContentResponse)
+            fetchLessonSummary(selectedTopic, lessonIntroductionResponse, lectureContentResponse),
+            fetchIntroductionTitle(selectedTopic)
           ]);
 
           setVideoId(videoResponse);
@@ -99,6 +103,7 @@ export default function LecturePage({ params }: LecturePageProps) {
           setLessonHeading(lessonHeadingResponse);
           setActivity(activityResponse);
           setSummary(summaryResponse);
+          setIntroductionTitle(introductionTitleResponse)
 
           const newLesson = {
             title: titleResponse,
@@ -111,6 +116,7 @@ export default function LecturePage({ params }: LecturePageProps) {
             lessonHeading: lessonHeadingResponse,
             activity: activityResponse,
             summary: summaryResponse,
+            introductionTitle: introductionTitleResponse
           };
 
           await createLesson(courseId, newLesson, userId);
@@ -169,7 +175,7 @@ export default function LecturePage({ params }: LecturePageProps) {
           <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10" id="video-lesson">
             <div className="flex flex-col gap-4">
               <div className="grid gap-3 text-xl tracking-wider">
-                <h2 className="text-3xl font-bold">Introduction to {title.replace(/[*-1234567890]/g, " ") || `${selectedTopic.replace(/[*-1234567890]/g, " ")}`}</h2>
+                <h2 className="text-3xl font-bold">{introductionTitle}</h2>
                 <LectureContent content={lessonIntroduction} />
               </div>
               <div>

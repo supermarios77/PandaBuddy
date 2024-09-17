@@ -7,6 +7,7 @@ import { GraduationCap, School, BookOpen, Backpack, Briefcase, Lightbulb, ArrowL
 import { useTheme } from "next-themes"
 import confetti from 'canvas-confetti'
 import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/use-toast"
 
 const educationLevels = [
   { name: "Elementary", icon: School, gradient: "from-green-400 to-green-600", grades: ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5"] },
@@ -51,7 +52,15 @@ export default function PickLevel() {
       })
     }
     setTimeout(() => {
-      router.push(`/courses/new-course/pick-subject?category=${category}&level=${selectedLevel}&grade=${grade}`)
+      if (grade) {
+        router.push(`/courses/new-course/pick-subject?category=${category}&grade=${grade}`)
+      } else {
+        toast({
+          title: "Error",
+          description: "Please select a grade before proceeding.",
+          variant: "destructive",
+        })
+      }
     }, 1000)
   }
 
@@ -128,7 +137,10 @@ export default function PickLevel() {
             >
               <Button
                 variant="outline"
-                onClick={() => setSelectedLevel(null)}
+                onClick={() => {
+                  setSelectedLevel(null)
+                  setSelectedGrade(null)
+                }}
                 className="mb-6"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to Levels
@@ -141,7 +153,7 @@ export default function PickLevel() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.05 }}
                     whileHover={{ scale: 1.05, rotate: [0, 1, -1, 0] }}
-                    className={`group flex flex-col items-center justify-center rounded-xl p-6 text-center text-white transition-all cursor-pointer bg-gradient-to-br ${educationLevels.find(level => level.name === selectedLevel)?.gradient} shadow-md hover:shadow-xl`}
+                    className={`group flex flex-col items-center justify-center rounded-xl p-6 text-center text-white transition-all cursor-pointer bg-gradient-to-br ${educationLevels.find(level => level.name === selectedLevel)?.gradient} shadow-md hover:shadow-xl ${selectedGrade === grade ? 'ring-4 ring-white' : ''}`}
                     onClick={() => handleGradeClick(grade)}
                     tabIndex={0}
                     role="button"
@@ -150,7 +162,7 @@ export default function PickLevel() {
                   >
                     <h2 className="text-2xl font-bold mb-2">{grade}</h2>
                     <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      Click to select
+                      {selectedGrade === grade ? 'Selected' : 'Click to select'}
                     </p>
                   </motion.div>
                 ))}

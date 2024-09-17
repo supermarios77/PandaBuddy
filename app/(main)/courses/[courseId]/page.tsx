@@ -6,20 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { fetchCourseData, createCourse } from "@/lib/firestoreFunctions";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Sparkles, Play, CheckCircle } from "lucide-react";
+import { BookOpen, Sparkles, Play, CheckCircle, ArrowRight } from "lucide-react";
 import useSound from "use-sound";
 import selectSound from "@/public/audio/pop.mp3";
 
 interface Topic {
   name: string;
   completed: boolean;
+  order: number;
 }
 
-export default function Component({
+export default function LessonPage({
   params,
 }: {
   params: { courseId: string };
@@ -41,14 +43,20 @@ export default function Component({
       try {
         const courseData = await fetchCourseData(courseId, String(userId));
         if (courseData) {
-          setTopics(courseData.topics);
+          const sortedTopics = courseData.topics
+            .map((topic: Topic) => ({
+              ...topic,
+              order: parseInt(topic.name.split('.')[0], 10) || 0
+            }))
+            .sort((a: Topic, b: Topic) => a.order - b.order);
+          setTopics(sortedTopics);
           setLoading(false);
         } else {
           const response = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              body: `List top 9 topics taught for ${selectedSubject} at ${level}`,
+              body: `List some lessons for a full course on ${selectedSubject} at my level ${level} dont label with lesson and then lesson number just add number and then lesson title`,
             }),
           });
           const data = await response.json();
@@ -56,8 +64,11 @@ export default function Component({
             .split("\n")
             .map((topic: string) => topic.replace(/[*-]/g, "").trim())
             .filter((topic: string | any[]) => topic.length > 0)
-            .sort()
-            .map((topic: string) => ({ name: topic, completed: false }));
+            .map((topic: string, index: number) => ({
+              name: topic,
+              completed: false,
+              order: index + 1
+            }));
 
           setTopics(cleanedTopics);
 
@@ -90,23 +101,22 @@ export default function Component({
     router.push(`/courses/${courseId}/${encodeURIComponent(lessonId)}`);
   };
 
-  useEffect(() => {
-    console.log("Topics updated:", topics);
-  }, [topics]);
+  const completedTopics = topics.filter(topic => topic.completed).length;
+  const progress = (completedTopics / topics.length) * 100;
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <Skeleton className="h-12 w-3/4 mx-auto" />
-        <Skeleton className="h-8 w-1/2 mx-auto" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <Skeleton className="h-8 sm:h-12 w-3/4 mx-auto" />
+        <Skeleton className="h-6 sm:h-8 w-1/2 mx-auto" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {[...Array(9)].map((_, index) => (
             <Card key={index} className="bg-card">
-              <CardHeader className="p-4">
-                <Skeleton className="h-6 w-3/4" />
+              <CardHeader className="p-3 sm:p-4">
+                <Skeleton className="h-5 sm:h-6 w-3/4" />
               </CardHeader>
-              <CardContent className="p-4">
-                <Skeleton className="h-20 w-full" />
+              <CardContent className="p-3 sm:p-4">
+                <Skeleton className="h-16 sm:h-20 w-full" />
               </CardContent>
             </Card>
           ))}
@@ -117,7 +127,7 @@ export default function Component({
 
   if (error) {
     return (
-      <Alert variant="destructive" className="max-w-md mx-auto mt-6">
+      <Alert variant="destructive" className="max-w-md mx-auto mt-4 sm:mt-6">
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
