@@ -119,6 +119,23 @@ const fetchLessonSubline = async (
   return response.output.trim();
 };
 
+const fetchInteractiveQuestions = async (topic: string, difficulty: string) => {
+  const prompt = `
+    Generate 3 interactive questions on the topic of ${topic}, make them ${difficulty}. 
+    For each question, include the question text, four options, and the correct option ID.
+    Format the response as an array of objects:
+    [
+      {
+        "question": "string",
+        "options": [{ "id": "string", "text": "string" }],
+        "correctOptionId": "string"
+      }
+    ]
+  `;
+  const response = await postRequest(prompt);
+  return JSON.parse(response.output.trim());
+};
+
 export {
   fetchLectureContent,
   fetchYouTubeVideo,
@@ -131,5 +148,6 @@ export {
   fetchLessonTitle,
   fetchLessonActivity,
   fetchLessonSummary,
-  fetchIntroductionTitle
+  fetchIntroductionTitle,
+  fetchInteractiveQuestions
 };

@@ -2,22 +2,34 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Lottie from "lottie-react";
-import { DotLoader } from "react-spinners";
 import { useUser } from "@clerk/nextjs";
-
-import LectureContent from "@/components/lesson/LectureContent";
 import { fetchLessonData, createLesson, fetchUserProfile } from "@/lib/firestoreFunctions";
-import { fetchTitle, fetchLessonIntroduction, fetchLectureContent, fetchYouTubeVideo, fetchLessonSubline, fetchLessonTitle, fetchLessonActivity, fetchLessonSummary, fetchIntroductionTitle } from "@/lib/api";
-
-import UFOPanda from "@/app/(main)/(home)/Animations/PandaInUFO.json";
+import {
+  fetchTitle,
+  fetchLessonIntroduction,
+  fetchLectureContent,
+  fetchYouTubeVideo,
+  fetchLessonSubline,
+  fetchLessonTitle,
+  fetchLessonActivity,
+  fetchLessonSummary,
+  fetchIntroductionTitle,
+  fetchInteractiveQuestions
+} from "@/lib/api";
 
 import { Poppins } from 'next/font/google'
 import clsx from "clsx";
 import { TracingBeam } from "@/components/ui/tracing-beam";
 import YoutubeVideo from "@/components/lesson/YoutubeVideo";
 import { Sidebar } from "@/components/lesson/Sidebar";
-import ReactMarkdown from 'react-markdown';
+import LectureContent from "@/components/lesson/LectureContent";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BookOpen, Activity, FileText } from "lucide-react";
+import Lottie from "lottie-react";
+import UFOPanda from "@/app/(main)/(home)/Animations/PandaInUFO.json"
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -44,8 +56,10 @@ export default function LecturePage({ params }: LecturePageProps) {
   const [lessonIntroduction, setLessonIntroduction] = useState("");
   const [activity, setActivity] = useState("");
   const [summary, setSummary] = useState("");
+  const [interactiveQuestions, setInteractiveQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
   const { user } = useUser();
   const userId = user?.id;
 
@@ -71,16 +85,14 @@ export default function LecturePage({ params }: LecturePageProps) {
           setLessonHeading(existingLesson.lessonHeading);
           setActivity(existingLesson.activity);
           setSummary(existingLesson.summary);
-          setIntroductionTitle(existingLesson.introductionTitle)
+          setIntroductionTitle(existingLesson.introductionTitle);
+          setInteractiveQuestions(existingLesson.interactiveQuestions || []);
+          setProgress(existingLesson.progress || 0);
         } else {
           const titleResponse = await fetchTitle(selectedTopic);
-          setTitle(titleResponse);
-
+          const introductionTitleResponse = await fetchIntroductionTitle(selectedTopic);
           const lessonIntroductionResponse = await fetchLessonIntroduction(selectedTopic, category);
-          setLessonIntroduction(lessonIntroductionResponse);
-
           const lectureContentResponse = await fetchLectureContent(subjectTopic, level, learningStyle, lessonIntroductionResponse);
-          setLectureContent(lectureContentResponse);
 
           const [
             videoResponse,
@@ -88,22 +100,26 @@ export default function LecturePage({ params }: LecturePageProps) {
             lessonHeadingResponse,
             activityResponse,
             summaryResponse,
-            introductionTitleResponse
+            interactiveQuestionsResponse
           ] = await Promise.all([
             fetchYouTubeVideo(selectedTopic, level, learningStyle),
             fetchLessonSubline(selectedTopic, lectureContentResponse),
             fetchLessonTitle(lectureContentResponse, selectedTopic),
             fetchLessonActivity(selectedTopic, lectureContentResponse),
             fetchLessonSummary(selectedTopic, lessonIntroductionResponse, lectureContentResponse),
-            fetchIntroductionTitle(selectedTopic)
+            fetchInteractiveQuestions(selectedTopic, level)
           ]);
 
+          setTitle(titleResponse);
+          setLessonIntroduction(lessonIntroductionResponse);
+          setLectureContent(lectureContentResponse);
           setVideoId(videoResponse);
           setSubTitle(subtitleResponse);
           setLessonHeading(lessonHeadingResponse);
           setActivity(activityResponse);
           setSummary(summaryResponse);
-          setIntroductionTitle(introductionTitleResponse)
+          setIntroductionTitle(introductionTitleResponse);
+          setInteractiveQuestions(interactiveQuestionsResponse);
 
           const newLesson = {
             title: titleResponse,
@@ -116,7 +132,8 @@ export default function LecturePage({ params }: LecturePageProps) {
             lessonHeading: lessonHeadingResponse,
             activity: activityResponse,
             summary: summaryResponse,
-            introductionTitle: introductionTitleResponse
+            introductionTitle: introductionTitleResponse,
+            progress: 0
           };
 
           await createLesson(courseId, newLesson, userId);
@@ -139,26 +156,33 @@ export default function LecturePage({ params }: LecturePageProps) {
     }
   };
 
+  const updateProgress = (increment: number) => {
+    setProgress(prev => Math.min(prev + increment, 100));
+  };
+
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <DotLoader color="#9570FF" size={60} />
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="text-center flex justify-center items-center h-screen">
-        <p className="text-red-500 text-xl">Error: {error}</p>
+      <div className="flex items-center justify-center h-screen">
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardTitle className="text-center text-red-500">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center">{error}</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className={clsx("flex flex-col lg:flex-row gap-8 p-6 mt-10 text-black dark:text-white", poppins.className)}>
+    <div className={clsx("flex flex-col lg:flex-row gap-8 p-6 bg-background text-foreground", poppins.className)}>
       <TracingBeam className="flex-grow">
-        <section className="max-w-4xl mx-auto">
+        <section className="max-w-4xl mx-auto space-y-12">
           <div className="flex items-center justify-between w-full p-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-[30px] mb-5" id="introduction">
             <div>
               <h3 className="text-gray-300 font-semibold mb-3">LESSON</h3>
@@ -172,52 +196,92 @@ export default function LecturePage({ params }: LecturePageProps) {
             <Lottie animationData={UFOPanda} loop={true} style={{ width: '150px', height: '150px' }} />
           </div>
 
-          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10" id="video-lesson">
-            <div className="flex flex-col gap-4">
-              <div className="grid gap-3 text-xl tracking-wider">
-                <h2 className="text-3xl font-bold">{introductionTitle}</h2>
-                <LectureContent content={lessonIntroduction} />
-              </div>
-              <div>
-                {videoId && <YoutubeVideo videoId={videoId} className="w-full" />}
-              </div>
-            </div>
-          </div>
+          <Card id="introduction">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold">{introductionTitle}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LectureContent content={lessonIntroduction} />
+            </CardContent>
+          </Card>
 
-          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10" id="main-content">
-            <div className="flex flex-col gap-4">
-              <h2 className="text-3xl font-bold"><ReactMarkdown>{lessonHeading}</ReactMarkdown></h2>
-              <div className="grid gap-3 text-xl">
-                <LectureContent content={lectureContent} />
-              </div>
-            </div>
-          </div>
+          <Card id="video-lesson">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                <Activity className="w-6 h-6" />
+                Video Lesson
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {videoId && <YoutubeVideo videoId={videoId} className="w-full rounded-xl overflow-hidden mb-6" />}
+              <h3 className="text-xl font-bold mb-4">{lessonHeading}</h3>
+              <LectureContent content={lectureContent} />
+            </CardContent>
+          </Card>
 
-          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10" id="activity">
-            <div className="flex flex-col gap-4">
-              <h2 className="text-3xl font-bold">Activity</h2>
-              <div className="grid gap-3 text-xl">
-                <LectureContent content={activity} />
-              </div>
-            </div>
-          </div>
+          <Card id="activity">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                <Activity className="w-6 h-6" />
+                Activity: Hands-on Learning
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LectureContent content={activity} />
+            </CardContent>
+          </Card>
 
-          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10" id="summary">
-            <div className="flex flex-col gap-4">
-              <h2 className="text-3xl font-bold">Lesson Summary</h2>
-              <div className="grid gap-3 text-xl">
-                <LectureContent content={summary} />
-              </div>
-            </div>
-          </div>
+          <Card id="summary">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                <FileText className="w-6 h-6" />
+                Lesson Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LectureContent content={summary} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold">Challenge Yourself!</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Ready for a more advanced challenge? Try these problems:</p>
+              <ul className="list-disc list-inside mt-2 space-y-2">
+                <li>Apply the concepts learned to a real-world scenario</li>
+                <li>Solve a complex problem using the techniques discussed</li>
+              </ul>
+              <Button className="mt-4" onClick={() => updateProgress(10)}>
+                Complete Challenge
+              </Button>
+            </CardContent>
+          </Card>
         </section>
       </TracingBeam>
       <div className="lg:w-1/3 lg:sticky lg:top-8 lg:self-start">
-        <Sidebar 
-          title={title} 
-          subtitle={subtitle} 
+        <Sidebar
+          title={title}
+          subtitle={subtitle}
           onSectionClick={handleSectionClick}
         />
+      </div>
+    </div>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="flex flex-col lg:flex-row gap-8 p-6">
+      <div className="flex-grow space-y-8">
+        <Skeleton className="h-[200px] w-full" />
+        <Skeleton className="h-[300px] w-full" />
+        <Skeleton className="h-[200px] w-full" />
+        <Skeleton className="h-[250px] w-full" />
+      </div>
+      <div className="lg:w-1/3">
+        <Skeleton className="h-[500px] w-full" />
       </div>
     </div>
   );
