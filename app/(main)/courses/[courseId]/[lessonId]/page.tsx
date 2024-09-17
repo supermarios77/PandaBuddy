@@ -2,27 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Lottie from "lottie-react";
 import { DotLoader } from "react-spinners";
 import { useUser } from "@clerk/nextjs";
 
 import LectureContent from "@/components/lesson/LectureContent";
-import { Button } from "@/components/ui/button";
-
 import { fetchLessonData, createLesson, fetchUserProfile } from "@/lib/firestoreFunctions";
-import { fetchTitle, fetchLessonIntroduction, fetchLectureContent, fetchYouTubeVideo, fetchLessonSubline } from "@/lib/api";
+import { fetchTitle, fetchLessonIntroduction, fetchLectureContent, fetchYouTubeVideo, fetchLessonSubline, fetchLessonTitle, fetchLessonActivity, fetchLessonSummary } from "@/lib/api";
 
 import UFOPanda from "@/app/(main)/(home)/Animations/PandaInUFO.json";
 
 import { Poppins } from 'next/font/google'
 import clsx from "clsx";
 import { TracingBeam } from "@/components/ui/tracing-beam";
-import { Sparkles, ChevronDown, ChevronUp, Layers } from "lucide-react";
 import YoutubeVideo from "@/components/lesson/YoutubeVideo";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Sidebar } from "@/components/lesson/Sidebar";
+import ReactMarkdown from 'react-markdown';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -30,35 +25,41 @@ const poppins = Poppins({
   variable: '--font-poppins',
 })
 
-function LecturePage({ params }) {
+type LecturePageProps = {
+  params: {
+    lessonId: string;
+    courseId: string;
+  };
+};
+
+export default function LecturePage({ params }: LecturePageProps) {
   const router = useRouter();
   const { lessonId, courseId } = params;
   const [lectureContent, setLectureContent] = useState("");
-  const [videoId, setVideoId] = useState(null);
+  const [videoId, setVideoId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
+  const [lessonHeading, setLessonHeading] = useState("")
   const [subtitle, setSubTitle] = useState("");
   const [lessonIntroduction, setLessonIntroduction] = useState("");
+  const [activity, setActivity] = useState("");
+  const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [progress, setProgress] = useState(0);
-
+  const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
   const userId = user?.id;
-  const userProfile = fetchUserProfile(userId);
 
   const [category, level, selectedSubject, selectedTopic] = lessonId.split("_").map(decodeURIComponent);
 
-  const subjectTopic = selectedSubject + selectedTopic
-
-  // @ts-ignore
-  const learningStyle = userProfile?.learningStyle || 'Visual';
-  const userName = user?.fullName
+  const subjectTopic = selectedSubject + selectedTopic;
 
   useEffect(() => {
     const fetchData = async () => {
       if (!userId) return;
 
       try {
+        const userProfile = await fetchUserProfile(userId);
+        const learningStyle = userProfile?.learningStyle || 'Visual';
+
         const existingLesson = await fetchLessonData(courseId, selectedTopic, userId);
         if (existingLesson) {
           setTitle(existingLesson.title);
@@ -66,28 +67,38 @@ function LecturePage({ params }) {
           setLectureContent(existingLesson.lectureContent);
           setVideoId(existingLesson.videoId);
           setSubTitle(existingLesson.subtitle);
-          setProgress(existingLesson.progress || 0);
+          setLessonHeading(existingLesson.lessonHeading);
+          setActivity(existingLesson.activity);
+          setSummary(existingLesson.summary);
         } else {
+          const titleResponse = await fetchTitle(selectedTopic);
+          setTitle(titleResponse);
+
+          const lessonIntroductionResponse = await fetchLessonIntroduction(selectedTopic, category);
+          setLessonIntroduction(lessonIntroductionResponse);
+
+          const lectureContentResponse = await fetchLectureContent(subjectTopic, level, learningStyle, lessonIntroductionResponse);
+          setLectureContent(lectureContentResponse);
+
           const [
-            titleResponse,
-            lessonIntroductionResponse,
-            lectureContentResponse,
             videoResponse,
             subtitleResponse,
+            lessonHeadingResponse,
+            activityResponse,
+            summaryResponse,
           ] = await Promise.all([
-            fetchTitle(selectedTopic),
-            fetchLessonIntroduction(selectedTopic, category),
-            fetchLectureContent(subjectTopic, level, learningStyle, userName),
             fetchYouTubeVideo(selectedTopic, level, learningStyle),
-            fetchLessonSubline(selectedTopic, lectureContent),
+            fetchLessonSubline(selectedTopic, lectureContentResponse),
+            fetchLessonTitle(lectureContentResponse, selectedTopic),
+            fetchLessonActivity(selectedTopic, lectureContentResponse),
+            fetchLessonSummary(selectedTopic, lessonIntroductionResponse, lectureContentResponse)
           ]);
 
-          setTitle(titleResponse);
-          setLessonIntroduction(lessonIntroductionResponse);
-          setLectureContent(lectureContentResponse);
           setVideoId(videoResponse);
           setSubTitle(subtitleResponse);
-          setProgress(0);
+          setLessonHeading(lessonHeadingResponse);
+          setActivity(activityResponse);
+          setSummary(summaryResponse);
 
           const newLesson = {
             title: titleResponse,
@@ -97,12 +108,9 @@ function LecturePage({ params }) {
             lessonIntroduction: lessonIntroductionResponse,
             completed: false,
             subtitle: subtitleResponse,
-            progress: 0,
-            completedSections: {
-              content: false,
-              video: false,
-              exercises: false,
-            }
+            lessonHeading: lessonHeadingResponse,
+            activity: activityResponse,
+            summary: summaryResponse,
           };
 
           await createLesson(courseId, newLesson, userId);
@@ -116,31 +124,12 @@ function LecturePage({ params }) {
     };
 
     fetchData();
-  }, [lessonId, courseId, selectedTopic, level, userId]);
+  }, [lessonId, courseId, selectedTopic, level, userId, category, subjectTopic]);
 
-  const generatePDF = async () => {
-    try {
-      const response = await fetch(`/api/generate-pdf`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ courseId, lessonId }),
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${lessonId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-      } else {
-        console.error('Failed to generate PDF:', await response.text());
-      }
-    } catch (error) {
-      console.error('Error generating PDF:', error);
+  const handleSectionClick = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -164,7 +153,7 @@ function LecturePage({ params }) {
     <div className={clsx("flex flex-col lg:flex-row gap-8 p-6 mt-10 text-black dark:text-white", poppins.className)}>
       <TracingBeam className="flex-grow">
         <section className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between w-full p-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-[30px] mb-5">
+          <div className="flex items-center justify-between w-full p-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-[30px] mb-5" id="introduction">
             <div>
               <h3 className="text-gray-300 font-semibold mb-3">LESSON</h3>
               <h1 className="text-3xl font-bold text-white">
@@ -177,33 +166,53 @@ function LecturePage({ params }) {
             <Lottie animationData={UFOPanda} loop={true} style={{ width: '150px', height: '150px' }} />
           </div>
 
-          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10">
+          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10" id="video-lesson">
             <div className="flex flex-col gap-4">
               <div className="grid gap-3 text-xl tracking-wider">
                 <h2 className="text-3xl font-bold">Introduction to {title.replace(/[*-1234567890]/g, " ") || `${selectedTopic.replace(/[*-1234567890]/g, " ")}`}</h2>
                 <LectureContent content={lessonIntroduction} />
               </div>
               <div>
-                <YoutubeVideo videoId={videoId} className="w-full" />
+                {videoId && <YoutubeVideo videoId={videoId} className="w-full" />}
               </div>
             </div>
           </div>
 
-          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10">
+          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10" id="main-content">
             <div className="flex flex-col gap-4">
-              <h2 className="text-3xl font-bold">What are {title}?</h2>
+              <h2 className="text-3xl font-bold"><ReactMarkdown>{lessonHeading}</ReactMarkdown></h2>
               <div className="grid gap-3 text-xl">
                 <LectureContent content={lectureContent} />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10" id="activity">
+            <div className="flex flex-col gap-4">
+              <h2 className="text-3xl font-bold">Activity</h2>
+              <div className="grid gap-3 text-xl">
+                <LectureContent content={activity} />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-background w-full p-6 border rounded-[30px] mt-5 mb-10" id="summary">
+            <div className="flex flex-col gap-4">
+              <h2 className="text-3xl font-bold">Lesson Summary</h2>
+              <div className="grid gap-3 text-xl">
+                <LectureContent content={summary} />
               </div>
             </div>
           </div>
         </section>
       </TracingBeam>
       <div className="lg:w-1/3 lg:sticky lg:top-8 lg:self-start">
-        <Sidebar title={title} subtitle={subtitle} progress={progress} />
+        <Sidebar 
+          title={title} 
+          subtitle={subtitle} 
+          onSectionClick={handleSectionClick}
+        />
       </div>
     </div>
   );
 }
-
-export default LecturePage;

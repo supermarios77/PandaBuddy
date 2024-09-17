@@ -1,13 +1,34 @@
 import { postRequest } from "@/utils/api";
 import { searchVideos } from "@/utils/youtube";
 
-const fetchLectureContent = async (selectedSubject: string, level: string, learnerType: string, userName: string) => {
-  const prompt = `Give me a comprehensive overview (paragraph) on ${selectedSubject}, my name is ${userName}, make our lesson feel direct you can use my name. Assume I know nothing about it and I am ${level}, i am a ${learnerType} learner. Use analogys, Cut down on analogys for ages 15 and above`;
+const fetchLectureContent = async (
+  selectedSubject: string,
+  level: string,
+  learnerType: string,
+  introduction: string
+) => {
+  const prompt = `Teach me about ${selectedSubject} i am at level ${level}, i am a ${learnerType} learner type.  make big words bold, make it bitesized and comprehensive, and make sure it aligns with ${selectedSubject}, Give me 3 whole paragraphs to teach me, in introdiction you taught me this - ${introduction}. Just use my level to teach dont go in-depth about it. and dont give introduction again`;
   const response = await postRequest(prompt);
   return response.output.trim();
 };
 
-const fetchYouTubeVideo = async (selectedTopic: string, level: string, learnerType: string) => {
+const fetchLessonActivity = async (subject: string, lesson: string) => {
+  const prompt = `Give me an activity on ${subject} i just learnt this in my lesson - ${lesson}. Make it easy to follow and i am a student`;
+  const response = await postRequest(prompt);
+  return response.output.trim();
+}
+
+const fetchLessonSummary = async (topic: string, introduction: string, lesson: string) => {
+  const prompt = `Give me a summary on my ${topic} lesson in introduction - ${introduction} in lesson - ${lesson} give it all in one peice and paragraph`;
+  const response = await postRequest(prompt);
+  return response.output.trim();
+}
+
+const fetchYouTubeVideo = async (
+  selectedTopic: string,
+  level: string,
+  learnerType: string
+) => {
   const queryPrompt = `Generate a search query for YouTube on the topic of ${selectedTopic} for ${level}, the person is a ${learnerType}`;
   const queryResponse = await postRequest(queryPrompt);
   const searchQuery = queryResponse.output.trim();
@@ -32,7 +53,16 @@ const fetchLessonIntroduction = async (topic: string, subject: string) => {
   return response.output.trim();
 };
 
-const fetchMultipleChoiceExerciseData = async (topic: string, difficulty: string) => {
+const fetchLessonTitle = async (lessonData: string, topic: string) => {
+  const prompt = `Make a nice what is/what are/etc.. title for this lesson ${lessonData} its on ${topic} topic`;
+  const response = await postRequest(prompt);
+  return response.output.trim();
+};
+
+const fetchMultipleChoiceExerciseData = async (
+  topic: string,
+  difficulty: string
+) => {
   const prompt = `
     Generate a multiple-choice question on the topic of ${topic}, make it ${difficulty}. Include the question, four options, and the correct option ID.
     Format the response as:
@@ -47,7 +77,10 @@ const fetchMultipleChoiceExerciseData = async (topic: string, difficulty: string
   return JSON.parse(response.output.trim());
 };
 
-const fetchFillInTheBlankExerciseData = async (topic: string, difficulty: string) => {
+const fetchFillInTheBlankExerciseData = async (
+  topic: string,
+  difficulty: string
+) => {
   const prompt = `
     Generate a fill-in-the-blank question on the topic of ${topic}, make it ${difficulty}. Include the question and the correct answer.
     Format the response as:
@@ -71,11 +104,14 @@ const validateAnswer = async (userAnswer: string, correctAnswer: string) => {
   return response.output.trim().toLowerCase() === "true";
 };
 
-const fetchLessonSubline = async (lessonTitle: string, lessonContent: string) => {
+const fetchLessonSubline = async (
+  lessonTitle: string,
+  lessonContent: string
+) => {
   const prompt = `Generate a lesson subline using ${lessonTitle} our lesson had this content ${lessonContent}`;
   const response = await postRequest(prompt);
   return response.output.trim();
-}
+};
 
 export {
   fetchLectureContent,
@@ -85,5 +121,8 @@ export {
   fetchMultipleChoiceExerciseData,
   fetchFillInTheBlankExerciseData,
   validateAnswer,
-  fetchLessonSubline
+  fetchLessonSubline,
+  fetchLessonTitle,
+  fetchLessonActivity,
+  fetchLessonSummary
 };
