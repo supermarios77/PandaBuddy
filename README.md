@@ -1,13 +1,31 @@
-**Panda Buddy** is an app designed to be your personal AI-powered study companion. Imagine having a friendly, knowledgeable panda by your side to help you learn new things, practice what you've learned, and stay on track with your studies. Here's how it works, in simple terms:
+# PandaBuddy
 
-1. **AI-Powered Learning:** Panda Buddy uses advanced AI (like the one from Google) to create study materials just for you. Whether you're learning math, science, history, or any other subject, Panda Buddy can generate lessons and quizzes tailored to your age and skill level.
+AI study companion built for the Gemini AI Competition
 
-2. **Interactive Quizzes:** To make learning fun, Panda Buddy includes interactive quizzes. You can play mini-games where you answer questions related to the subject you're studying. You start with 5 hearts (like lives in a video game), and your goal is to answer as many questions as possible without losing all your hearts.
+> **Not maintained.** This project is no longer actively developed.
 
-3. **Study Tools:** The app also includes tools like a Pomodoro timer, which helps you manage your study time effectively, and a notes section where you can jot down important information.
+## Demo
 
-4. **Creative Workspace:** As you play and learn, you earn points that can be used to buy stickers for your workspace.
+Live at [panda-buddy.vercel.app](https://panda-buddy.vercel.app)
 
-5. **Always Improving:** Panda Buddy is constantly evolving, with new games and features being added. The app is designed to grow with you, providing more challenging content as you get better at your subjects.
+## Overview
 
-In short, Panda Buddy is like having a smart, fun, and supportive study buddy who helps make learning enjoyable and rewarding. Whether you're a beginner or advanced, Panda Buddy adapts to your needs, making it easier to stay motivated and on track with your studies.
+PandaBuddy is an AI-powered study companion that generates lessons and quizzes tailored to the learner's age and skill level. It was built as a submission for the Gemini AI Competition.
+
+## Features
+
+- **AI-powered learning:** Google Gemini generates study materials adapted to subject and skill level.
+- **Interactive quizzes:** mini-games with a hearts-based lives system and adaptive difficulty.
+- **Pomodoro timer:** manage study sessions with built-in time tracking.
+- **Notes:** jot down key information within the app.
+- **Creative workspace:** earn points and unlock stickers as you learn.
+
+## Tech stack
+
+- **Language:** TypeScript
+- **AI:** Google Gemini
+- **Framework:** Next.js
+
+## License
+
+Other
